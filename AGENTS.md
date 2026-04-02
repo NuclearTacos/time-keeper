@@ -3,3 +3,7 @@
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
+
+# Convex
+
+`convex/_generated/` is committed to the repo. Whenever you add or change Convex functions or schema, run `npx convex dev` locally and stage the updated `_generated/` files alongside the function changes. Vercel builds just run `npx next build` — the generated files must already be present in the repo.
