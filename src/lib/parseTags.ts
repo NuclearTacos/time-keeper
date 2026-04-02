@@ -5,7 +5,7 @@
  * Example: "Fix login bug #auth #backend" → { name: "Fix login bug", tags: ["auth", "backend"] }
  */
 export function parseTags(input: string): { name: string; tags: string[] } {
-  const tags = [...input.matchAll(/#(\w+)/g)].map((m) => m[1].toLowerCase());
-  const name = input.replace(/#\w+/g, "").trim();
+  const tags = [...input.matchAll(/#(\S+)/g)].map((m) => m[1].toLowerCase());
+  const name = input.replace(/#\S+/g, "").trim();
   return { name, tags };
 }

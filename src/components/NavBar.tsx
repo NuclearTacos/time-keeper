@@ -9,27 +9,29 @@ export function NavBar() {
   const { signOut } = useAuthActions();
 
   return (
-    <nav className="border-b px-4 py-2 flex items-center justify-between text-sm">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/"
-          className={pathname === "/" ? "font-semibold" : "text-muted-foreground hover:text-foreground transition-colors"}
+    <nav className="border-b text-sm">
+      <div className="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            className={pathname === "/" ? "font-semibold" : "text-muted-foreground hover:text-foreground transition-colors"}
+          >
+            timer
+          </Link>
+          <Link
+            href="/review"
+            className={pathname === "/review" ? "font-semibold" : "text-muted-foreground hover:text-foreground transition-colors"}
+          >
+            review
+          </Link>
+        </div>
+        <button
+          onClick={() => signOut()}
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
-          timer
-        </Link>
-        <Link
-          href="/review"
-          className={pathname === "/review" ? "font-semibold" : "text-muted-foreground hover:text-foreground transition-colors"}
-        >
-          review
-        </Link>
+          sign out
+        </button>
       </div>
-      <button
-        onClick={() => signOut()}
-        className="text-muted-foreground hover:text-foreground transition-colors"
-      >
-        sign out
-      </button>
     </nav>
   );
 }
