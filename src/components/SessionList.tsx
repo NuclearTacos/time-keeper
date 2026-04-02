@@ -3,6 +3,7 @@
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { TimeBumpInput } from "@/components/TimeBumpInput";
 
 interface Session {
   _id: Id<"sessions">;
@@ -18,8 +19,6 @@ interface Entry {
 interface Props {
   entries: Entry[];
 }
-
-const BUMP_OPTIONS = [-15, -5, -1, 1, 5, 15];
 
 function formatTime(epochMs: number): string {
   return new Date(epochMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -43,7 +42,6 @@ export function SessionList({ entries }: Props) {
     return <p className="text-sm text-muted-foreground">No sessions in this range.</p>;
   }
 
-  // Group by date
   const byDate = new Map<string, Entry[]>();
   for (const entry of entries) {
     const date = formatDate(entry.session.startTime);
@@ -62,25 +60,33 @@ export function SessionList({ entries }: Props) {
                 ? formatDurationMs(session.endTime - session.startTime)
                 : null;
               return (
-                <li key={session._id} className="py-2 space-y-1.5">
+                <li key={session._id} className="py-2 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium truncate">{task?.name ?? "Unknown task"}</p>
                     {duration && (
                       <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{duration}</span>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <BumpRow
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="tabular-nums">{formatTime(session.startTime)}</span>
+                    {session.endTime !== undefined && (
+                      <>
+                        <span>→</span>
+                        <span className="tabular-nums">{formatTime(session.endTime)}</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    {/* + means earlier for start (negative delta) */}
+                    <TimeBumpInput
                       label="start"
-                      time={session.startTime}
                       onBump={(delta) =>
-                        adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: delta })
+                        adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: -delta })
                       }
                     />
                     {session.endTime !== undefined && (
-                      <BumpRow
+                      <TimeBumpInput
                         label="end"
-                        time={session.endTime}
                         onBump={(delta) =>
                           adjustSessionTime({ sessionId: session._id, boundary: "end", deltaMinutes: delta })
                         }
@@ -93,34 +99,6 @@ export function SessionList({ entries }: Props) {
           </ul>
         </div>
       ))}
-    </div>
-  );
-}
-
-function BumpRow({
-  label,
-  time,
-  onBump,
-}: {
-  label: string;
-  time: number;
-  onBump: (delta: number) => void;
-}) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-xs text-muted-foreground w-8 shrink-0">{label}:</span>
-      <span className="text-xs tabular-nums text-muted-foreground w-12 shrink-0">{formatTime(time)}</span>
-      <div className="flex gap-1">
-        {BUMP_OPTIONS.map((delta) => (
-          <button
-            key={delta}
-            onClick={() => onBump(delta)}
-            className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
-          >
-            {delta > 0 ? `+${delta}` : delta}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
