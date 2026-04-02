@@ -19,6 +19,7 @@ export function RecentTasksList() {
   return (
     <ul className="divide-y">
       {recentTasks.map(({ task, lastSessionStart }) => {
+        if (!task) return null;
         const ago = formatTimeAgo(lastSessionStart);
         return (
           <li
