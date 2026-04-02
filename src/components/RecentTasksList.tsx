@@ -5,7 +5,6 @@ import { useQuery, useMutation } from "convex/react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
-import { Pencil } from "lucide-react";
 import { setLastUndo } from "@/lib/undo";
 
 export function RecentTasksList() {
@@ -96,20 +95,19 @@ export function RecentTasksList() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm font-medium truncate">{task.name}</p>
-                    <button
+                    <p
+                      className="text-sm font-medium truncate cursor-pointer hover:text-muted-foreground transition-colors"
                       onClick={() => startEditing(task)}
-                      className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Pencil size={11} />
-                    </button>
+                      {task.name}
+                    </p>
                   </>
                 )}
               </div>
               {!isEditing && task.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-0.5">
+                <div className="flex flex-wrap gap-1 mt-0.5" onClick={() => startEditing(task)}>
                   {task.tags.map((tag) => (
-                    <span key={tag} className="text-xs text-muted-foreground">
+                    <span key={tag} className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
                       #{tag}
                     </span>
                   ))}
