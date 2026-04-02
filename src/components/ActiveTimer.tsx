@@ -5,7 +5,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
 import { parseTags } from "@/lib/parseTags";
-import { Pencil } from "lucide-react";
 
 export function ActiveTimer() {
   const activeData = useQuery(api.sessions.getActiveSession);
@@ -71,7 +70,7 @@ export function ActiveTimer() {
     <div className="border rounded-md p-4 space-y-2">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2">
             <span className="text-green-500 text-xs shrink-0">●</span>
             {isEditing ? (
               <input
@@ -83,15 +82,12 @@ export function ActiveTimer() {
                 className="flex-1 text-sm font-semibold bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
               />
             ) : (
-              <>
-                <span className="font-semibold truncate">{task?.name ?? "Unknown task"}</span>
-                <button
-                  onClick={startEditing}
-                  className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Pencil size={12} />
-                </button>
-              </>
+              <span
+                className="font-semibold cursor-pointer hover:text-muted-foreground transition-colors"
+                onClick={startEditing}
+              >
+                {task?.name ?? "Unknown task"}
+              </span>
             )}
           </div>
           {!isEditing && task && task.tags.length > 0 && (
