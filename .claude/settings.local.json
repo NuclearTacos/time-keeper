@@ -8,7 +8,11 @@
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --yes)",
       "Bash(npm install:*)",
       "Bash(npx convex:*)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "mcp__claude_ai_Vercel__list_teams",
+      "mcp__claude_ai_Vercel__list_projects",
+      "mcp__claude_ai_Vercel__list_deployments",
+      "mcp__claude_ai_Vercel__get_deployment_build_logs"
     ]
   }
 }
