@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as sessions from "../sessions.js";
 import type * as tasks from "../tasks.js";
+import type * as userSettings from "../userSettings.js";
 
 import type {
   ApiFromModules,
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   sessions: typeof sessions;
   tasks: typeof tasks;
+  userSettings: typeof userSettings;
 }>;
 
 /**
