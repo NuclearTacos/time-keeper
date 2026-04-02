@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import { NavBar } from "@/components/NavBar";
 import { TimeBreakdownByTask } from "@/components/TimeBreakdownByTask";
 import { TimeBreakdownByTag } from "@/components/TimeBreakdownByTag";
+import { SessionList } from "@/components/SessionList";
 
 function toDateInputValue(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -72,6 +73,12 @@ export default function ReviewPage() {
                 By tag
               </h2>
               <TimeBreakdownByTag entries={entries} />
+            </section>
+            <section>
+              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                Sessions
+              </h2>
+              <SessionList entries={entries} />
             </section>
           </>
         )}

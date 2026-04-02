@@ -4,15 +4,19 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
-import { parseTags } from "@/lib/parseTags";
+import { setLastUndo } from "@/lib/undo";
+
+const BUMP_OPTIONS = [-15, -5, -1, 1, 5, 15];
 
 export function ActiveTimer() {
   const activeData = useQuery(api.sessions.getActiveSession);
   const stopSession = useMutation(api.sessions.stopActiveSession);
   const updateTask = useMutation(api.tasks.updateTask);
+  const adjustSessionTime = useMutation(api.sessions.adjustSessionTime);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editTags, setEditTags] = useState("");
 
   useEffect(() => {
     if (!activeData?.session) {
@@ -47,16 +51,23 @@ export function ActiveTimer() {
 
   function startEditing() {
     if (!task) return;
-    const tagString = task.tags.map((t) => `#${t}`).join(" ");
-    setEditValue(tagString ? `${task.name} ${tagString}` : task.name);
+    setEditName(task.name);
+    setEditTags(task.tags.map((t) => `#${t}`).join(" "));
     setIsEditing(true);
   }
 
   async function saveEdit() {
     if (!task) return;
-    const { name, tags } = parseTags(editValue);
-    if (name.trim()) {
-      await updateTask({ taskId: task._id, name: name.trim(), tags });
+    if (editName.trim()) {
+      const prevName = task.name;
+      const prevTags = task.tags;
+      const tags = editTags.trim()
+        ? editTags.split(/\s+/).map((t) => t.replace(/^#/, "").toLowerCase()).filter(Boolean)
+        : [];
+      await updateTask({ taskId: task._id, name: editName.trim(), tags });
+      setLastUndo(async () => {
+        await updateTask({ taskId: task._id, name: prevName, tags: prevTags });
+      });
     }
     setIsEditing(false);
   }
@@ -66,21 +77,36 @@ export function ActiveTimer() {
     if (e.key === "Escape") setIsEditing(false);
   }
 
+  function handleContainerBlur(e: React.FocusEvent) {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    saveEdit();
+  }
+
+  const session = activeData.session;
+
   return (
     <div className="border rounded-md p-4 space-y-2">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <span className="text-green-500 text-xs shrink-0">●</span>
+            <span className="text-green-500 text-xs shrink-0 mt-0.5">●</span>
             {isEditing ? (
-              <input
-                autoFocus
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={saveEdit}
-                className="flex-1 text-sm font-semibold bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
-              />
+              <div className="flex-1 space-y-1" onBlur={handleContainerBlur}>
+                <input
+                  autoFocus
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full text-sm font-semibold bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
+                />
+                <input
+                  value={editTags}
+                  onChange={(e) => setEditTags(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="tags: #tag1 #tag2"
+                  className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
+                />
+              </div>
             ) : (
               <span
                 className="font-semibold cursor-pointer hover:text-muted-foreground transition-colors"
@@ -111,6 +137,22 @@ export function ActiveTimer() {
           >
             stop
           </button>
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5 pt-1 border-t border-foreground/10">
+        <span className="text-xs text-muted-foreground shrink-0">start:</span>
+        <div className="flex gap-1">
+          {BUMP_OPTIONS.map((delta) => (
+            <button
+              key={delta}
+              onClick={() =>
+                adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: delta })
+              }
+              className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
+            >
+              {delta > 0 ? `+${delta}` : delta}
+            </button>
+          ))}
         </div>
       </div>
     </div>

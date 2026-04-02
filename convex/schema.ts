@@ -12,6 +12,11 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
 
+  userSettings: defineTable({
+    userId: v.id("users"),
+    activeTags: v.array(v.string()),
+  }).index("by_user", ["userId"]),
+
   sessions: defineTable({
     taskId: v.id("tasks"),
     userId: v.id("users"),

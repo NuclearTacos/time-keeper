@@ -5,7 +5,11 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { parseTags } from "@/lib/parseTags";
 
-export function NewTaskInput() {
+interface Props {
+  activeTags?: string[];
+}
+
+export function NewTaskInput({ activeTags = [] }: Props) {
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
   const startSession = useMutation(api.sessions.startSession);
@@ -16,9 +20,10 @@ export function NewTaskInput() {
     if (!trimmed) return;
     const { name, tags } = parseTags(trimmed);
     if (!name) return;
+    const mergedTags = [...new Set([...activeTags, ...tags])];
     setLoading(true);
     try {
-      await startSession({ name, tags });
+      await startSession({ name, tags: mergedTags });
       setValue("");
     } finally {
       setLoading(false);

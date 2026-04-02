@@ -120,6 +120,56 @@ export const startSession = mutation({
   },
 });
 
+export const adjustSessionTime = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    boundary: v.union(v.literal("start"), v.literal("end")),
+    deltaMinutes: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const session = await ctx.db.get(args.sessionId);
+    if (!session || session.userId !== userId) throw new Error("Not found");
+
+    const deltaMs = args.deltaMinutes * 60_000;
+
+    if (args.boundary === "start") {
+      const newStart = session.startTime + deltaMs;
+      // Find the session that ends closest before this one, clamp its end if needed
+      const prevSessions = await ctx.db
+        .query("sessions")
+        .withIndex("by_user_and_start", (q) =>
+          q.eq("userId", userId).lt("startTime", session.startTime)
+        )
+        .order("desc")
+        .take(1);
+      const prev = prevSessions[0];
+      if (prev && prev.endTime !== undefined && prev.endTime > newStart) {
+        await ctx.db.patch(prev._id, { endTime: newStart });
+      }
+      await ctx.db.patch(args.sessionId, { startTime: newStart });
+    } else {
+      if (session.endTime === undefined) throw new Error("Active session has no end time");
+      const newEnd = session.endTime + deltaMs;
+      // Find the session that starts closest after this one, push its start if needed
+      const nextSessions = await ctx.db
+        .query("sessions")
+        .withIndex("by_user_and_start", (q) =>
+          q.eq("userId", userId).gt("startTime", session.startTime)
+        )
+        .order("asc")
+        .take(1);
+      const next = nextSessions[0];
+      if (next && next.startTime < newEnd) {
+        await ctx.db.patch(next._id, { startTime: newEnd });
+      }
+      await ctx.db.patch(args.sessionId, { endTime: newEnd });
+    }
+  },
+});
+
 export const stopActiveSession = mutation({
   args: {},
   handler: async (ctx) => {

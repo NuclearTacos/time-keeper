@@ -5,8 +5,8 @@ import { useQuery, useMutation } from "convex/react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
-import { parseTags } from "@/lib/parseTags";
 import { Pencil } from "lucide-react";
+import { setLastUndo } from "@/lib/undo";
 
 export function RecentTasksList() {
   const recentTasks = useQuery(api.sessions.getRecentTasks, { limit: 10 });
@@ -14,7 +14,8 @@ export function RecentTasksList() {
   const startSession = useMutation(api.sessions.startSession);
   const updateTask = useMutation(api.tasks.updateTask);
   const [editingId, setEditingId] = useState<Id<"tasks"> | null>(null);
-  const [editValue, setEditValue] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editTags, setEditTags] = useState("");
 
   if (recentTasks === undefined) {
     return <p className="text-sm text-muted-foreground">Loading...</p>;
@@ -29,15 +30,23 @@ export function RecentTasksList() {
   }
 
   function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[] }) {
-    const tagString = task.tags.map((t) => `#${t}`).join(" ");
-    setEditValue(tagString ? `${task.name} ${tagString}` : task.name);
+    setEditName(task.name);
+    setEditTags(task.tags.map((t) => `#${t}`).join(" "));
     setEditingId(task._id);
   }
 
   async function saveEdit(taskId: Id<"tasks">) {
-    const { name, tags } = parseTags(editValue);
-    if (name.trim()) {
-      await updateTask({ taskId, name: name.trim(), tags });
+    if (editName.trim()) {
+      const task = recentTasks?.find((r) => r.task?._id === taskId)?.task;
+      const prevName = task?.name ?? "";
+      const prevTags = task?.tags ?? [];
+      const tags = editTags.trim()
+        ? editTags.split(/\s+/).map((t) => t.replace(/^#/, "").toLowerCase()).filter(Boolean)
+        : [];
+      await updateTask({ taskId, name: editName.trim(), tags });
+      setLastUndo(async () => {
+        await updateTask({ taskId, name: prevName, tags: prevTags });
+      });
     }
     setEditingId(null);
   }
@@ -45,6 +54,11 @@ export function RecentTasksList() {
   function handleKeyDown(e: React.KeyboardEvent, taskId: Id<"tasks">) {
     if (e.key === "Enter") saveEdit(taskId);
     if (e.key === "Escape") setEditingId(null);
+  }
+
+  function handleContainerBlur(e: React.FocusEvent, taskId: Id<"tasks">) {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    saveEdit(taskId);
   }
 
   return (
@@ -61,14 +75,25 @@ export function RecentTasksList() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 {isEditing ? (
-                  <input
-                    autoFocus
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, task._id)}
-                    onBlur={() => saveEdit(task._id)}
-                    className="flex-1 text-sm font-medium bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
-                  />
+                  <div
+                    className="flex-1 space-y-1"
+                    onBlur={(e) => handleContainerBlur(e, task._id)}
+                  >
+                    <input
+                      autoFocus
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, task._id)}
+                      className="w-full text-sm font-medium bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
+                    />
+                    <input
+                      value={editTags}
+                      onChange={(e) => setEditTags(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, task._id)}
+                      placeholder="tags: #tag1 #tag2"
+                      className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
+                    />
+                  </div>
                 ) : (
                   <>
                     <p className="text-sm font-medium truncate">{task.name}</p>
