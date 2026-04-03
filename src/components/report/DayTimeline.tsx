@@ -44,7 +44,7 @@ export function DayTimeline({ sessions, colorMap, dayStart }: Props) {
   let hasUntagged = false;
   for (const s of sessions) {
     if (s.tags.length === 0) hasUntagged = true;
-    else tagSet.add(s.tags[0]);
+    else for (const tag of s.tags) tagSet.add(tag);
   }
   const tagLanes = [...tagSet].sort();
   if (hasUntagged) tagLanes.push("(untagged)");
@@ -52,8 +52,11 @@ export function DayTimeline({ sessions, colorMap, dayStart }: Props) {
   const byTag = new Map<string, TimelineSession[]>();
   for (const lane of tagLanes) byTag.set(lane, []);
   for (const s of sessions) {
-    const key = s.tags.length > 0 ? s.tags[0] : "(untagged)";
-    byTag.get(key)!.push(s);
+    if (s.tags.length === 0) {
+      byTag.get("(untagged)")!.push(s);
+    } else {
+      for (const tag of s.tags) byTag.get(tag)?.push(s);
+    }
   }
 
   return (
