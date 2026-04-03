@@ -7,6 +7,8 @@ import { NavBar } from "@/components/NavBar";
 import { TimeBreakdownByTask } from "@/components/TimeBreakdownByTask";
 import { TimeBreakdownByTag } from "@/components/TimeBreakdownByTag";
 import { SessionList } from "@/components/SessionList";
+import { BumpToast } from "@/components/BumpToast";
+import { useBumpAccumulator } from "@/lib/useBumpAccumulator";
 
 function toDateInputValue(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -26,6 +28,7 @@ export default function ReviewPage() {
 
   const [fromDate, setFromDate] = useState(sevenDaysAgo);
   const [toDate, setToDate] = useState(today);
+  const bump = useBumpAccumulator();
 
   const entries = useQuery(api.sessions.getSessionsInRange, {
     fromTime: startOfDay(fromDate),
@@ -36,6 +39,9 @@ export default function ReviewPage() {
     <div className="min-h-screen flex flex-col">
       <NavBar />
       <main className="flex-1 max-w-lg w-full mx-auto px-4 py-6 space-y-6">
+        {bump.isActive && (
+          <BumpToast entries={bump.entries} onDismiss={bump.dismiss} />
+        )}
         <div>
           <h1 className="text-sm font-semibold mb-3">Review</h1>
           <div className="flex items-center gap-2 text-sm">
@@ -78,7 +84,11 @@ export default function ReviewPage() {
               <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                 Sessions
               </h2>
-              <SessionList entries={entries} />
+              <SessionList
+                entries={entries}
+                onBump={bump.recordBump}
+                lockedPairs={bump.lockedPairs}
+              />
             </section>
           </>
         )}

@@ -6,9 +6,13 @@ import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
 import { setLastUndo } from "@/lib/undo";
 
-const BUMP_OPTIONS = [-15, -5, -1, 1, 5, 15];
+const BUMP_OPTIONS = [-5, -1, 1, 5];
 
-export function ActiveTimer() {
+interface Props {
+  onBump?: (key: string, label: string, deltaMin: number) => void;
+}
+
+export function ActiveTimer({ onBump }: Props) {
   const activeData = useQuery(api.sessions.getActiveSession);
   const stopSession = useMutation(api.sessions.stopActiveSession);
   const updateTask = useMutation(api.tasks.updateTask);
@@ -48,6 +52,7 @@ export function ActiveTimer() {
   }
 
   const { task } = activeData;
+  const session = activeData.session;
 
   function startEditing() {
     if (!task) return;
@@ -82,7 +87,11 @@ export function ActiveTimer() {
     saveEdit();
   }
 
-  const session = activeData.session;
+  function handleBump(display: number) {
+    const deltaMinutes = -display; // +display means earlier start
+    adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes });
+    onBump?.(`${session._id}-start`, "start", display);
+  }
 
   return (
     <div className="border rounded-md p-4 space-y-2">
@@ -145,7 +154,7 @@ export function ActiveTimer() {
           {BUMP_OPTIONS.map((display) => (
             <button
               key={display}
-              onClick={() => adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: -display })}
+              onClick={() => handleBump(display)}
               className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
             >
               {display > 0 ? `+${display}` : display}

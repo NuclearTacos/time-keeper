@@ -5,12 +5,15 @@ import { NewTaskInput } from "@/components/NewTaskInput";
 import { RecentTasksList } from "@/components/RecentTasksList";
 import { NavBar } from "@/components/NavBar";
 import { ActiveTagsBar } from "@/components/ActiveTagsBar";
+import { BumpToast } from "@/components/BumpToast";
 import { useActiveTags } from "@/lib/useActiveTags";
+import { useBumpAccumulator } from "@/lib/useBumpAccumulator";
 import { useEffect } from "react";
 import { popLastUndo } from "@/lib/undo";
 
 export default function Home() {
   const { tags, addTag, removeTag } = useActiveTags();
+  const bump = useBumpAccumulator();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -30,7 +33,10 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <NavBar />
       <main className="flex-1 max-w-lg w-full mx-auto px-4 py-6 space-y-6">
-        <ActiveTimer />
+        {bump.isActive && (
+          <BumpToast entries={bump.entries} onDismiss={bump.dismiss} />
+        )}
+        <ActiveTimer onBump={bump.recordBump} />
         <div className="space-y-2">
           <ActiveTagsBar tags={tags} onAdd={addTag} onRemove={removeTag} />
           <NewTaskInput activeTags={tags} />
