@@ -156,8 +156,8 @@ export function SessionList({ entries, links }: Props) {
                             isLinked
                               ? deleteLink({ linkId: link!._id })
                               : createLink({
-                                  endSessionId: session._id,
-                                  startSessionId: next._id,
+                                  endSessionId: next._id,
+                                  startSessionId: session._id,
                                 })
                           }
                           title={isLinked ? "Unlink boundaries" : "Link boundaries"}
