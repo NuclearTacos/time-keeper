@@ -31,6 +31,7 @@ export type TimelineSession = {
   sessionId: string;
   taskId: string;
   taskName: string;
+  tags: string[];
   startMs: number;
   endMs: number;
   durationLabel: string;
@@ -98,6 +99,7 @@ export function buildTimelineData(
         sessionId: session._id,
         taskId: task!._id,
         taskName: task!.name,
+        tags: task!.tags,
         startMs: session.startTime,
         endMs: end,
         durationLabel: formatDuration(end - session.startTime),
