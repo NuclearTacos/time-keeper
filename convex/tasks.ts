@@ -30,6 +30,59 @@ export const updateTask = mutation({
   },
 });
 
+export const renameTag = mutation({
+  args: { oldTag: v.string(), newTag: v.string() },
+  handler: async (ctx, { oldTag, newTag }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const task of tasks) {
+      if (task.tags.includes(oldTag)) {
+        const newTags = task.tags.map((t) => (t === oldTag ? newTag : t));
+        await ctx.db.patch(task._id, { tags: newTags });
+      }
+    }
+    // Also migrate tagHierarchy entries
+    const hier = await ctx.db
+      .query("tagHierarchy")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const entry of hier) {
+      if (entry.tag === oldTag) {
+        await ctx.db.patch(entry._id, { tag: newTag });
+      } else if (entry.supertag === oldTag) {
+        await ctx.db.patch(entry._id, { supertag: newTag });
+      }
+    }
+  },
+});
+
+export const deleteTag = mutation({
+  args: { tag: v.string() },
+  handler: async (ctx, { tag }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const task of tasks) {
+      if (task.tags.includes(tag)) {
+        await ctx.db.patch(task._id, { tags: task.tags.filter((t) => t !== tag) });
+      }
+    }
+    // Remove tagHierarchy entries for this tag
+    const hier = await ctx.db
+      .query("tagHierarchy")
+      .withIndex("by_user_and_tag", (q) => q.eq("userId", userId).eq("tag", tag))
+      .collect();
+    for (const entry of hier) await ctx.db.delete(entry._id);
+  },
+});
+
 export const getAllUserTags = query({
   args: {},
   handler: async (ctx) => {
@@ -39,9 +92,35 @@ export const getAllUserTags = query({
       .query("tasks")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
-    const tagSet = new Set<string>();
-    for (const task of tasks) for (const tag of task.tags) tagSet.add(tag);
-    return [...tagSet].sort();
+
+    // Build a map of taskId → tags for quick lookup
+    const taskTagMap = new Map(tasks.map((t) => [t._id, t.tags]));
+
+    // Find the most recent session startTime per tag
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_user_and_start", (q) => q.eq("userId", userId))
+      .order("desc")
+      .collect();
+
+    const tagLastUsed = new Map<string, number>();
+    for (const s of sessions) {
+      const tags = taskTagMap.get(s.taskId) ?? [];
+      for (const tag of tags) {
+        if (!tagLastUsed.has(tag)) tagLastUsed.set(tag, s.startTime);
+      }
+    }
+
+    // Collect all tags (including those never used in a session)
+    const allTags = new Set<string>();
+    for (const task of tasks) for (const tag of task.tags) allTags.add(tag);
+
+    return [...allTags].sort((a, b) => {
+      const aTime = tagLastUsed.get(a) ?? 0;
+      const bTime = tagLastUsed.get(b) ?? 0;
+      if (bTime !== aTime) return bTime - aTime; // most recent first
+      return a.localeCompare(b); // alphabetical tiebreak
+    });
   },
 });
 

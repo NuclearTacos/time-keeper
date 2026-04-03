@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { FeedbackButton } from "./FeedbackButton";
 
 export function NavBar() {
   const pathname = usePathname();
@@ -37,12 +38,15 @@ export function NavBar() {
             tags
           </Link>
         </div>
-        <button
-          onClick={() => signOut()}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          sign out
-        </button>
+        <div className="flex items-center gap-3">
+          <FeedbackButton />
+          <button
+            onClick={() => signOut()}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            sign out
+          </button>
+        </div>
       </div>
     </nav>
   );

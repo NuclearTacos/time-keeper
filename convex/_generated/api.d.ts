@@ -9,8 +9,10 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as feedback from "../feedback.js";
 import type * as http from "../http.js";
 import type * as sessions from "../sessions.js";
+import type * as tagHierarchy from "../tagHierarchy.js";
 import type * as tasks from "../tasks.js";
 import type * as userSettings from "../userSettings.js";
 
@@ -22,8 +24,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  feedback: typeof feedback;
   http: typeof http;
   sessions: typeof sessions;
+  tagHierarchy: typeof tagHierarchy;
   tasks: typeof tasks;
   userSettings: typeof userSettings;
 }>;
