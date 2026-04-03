@@ -87,9 +87,7 @@ export function SessionList({ entries, onBump, lockedPairs = [] }: Props) {
     boundary: "start" | "end",
     display: number
   ) {
-    // For start: +display means earlier (negate); for end: +display means later (keep)
-    const deltaMinutes = boundary === "start" ? -display : display;
-    adjustSessionTime({ sessionId, boundary, deltaMinutes });
+    adjustSessionTime({ sessionId, boundary, deltaMinutes: display });
 
     const key = `${sessionId}-${boundary}`;
     const adjacentPairs = computeAdjacentPairs(entries);
@@ -98,11 +96,10 @@ export function SessionList({ entries, onBump, lockedPairs = [] }: Props) {
     const partnerKey = findLockedPartner(key, lockedPairs);
     if (partnerKey) {
       const [partnerId, partnerBoundary] = partnerKey.split("-") as [string, "start" | "end"];
-      const partnerDelta = partnerBoundary === "start" ? -display : display;
       adjustSessionTime({
         sessionId: partnerId as Id<"sessions">,
         boundary: partnerBoundary,
-        deltaMinutes: partnerDelta,
+        deltaMinutes: display,
       });
     }
 

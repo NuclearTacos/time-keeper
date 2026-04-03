@@ -88,8 +88,7 @@ export function ActiveTimer({ onBump }: Props) {
   }
 
   function handleBump(display: number) {
-    const deltaMinutes = -display; // +display means earlier start
-    adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes });
+    adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: display });
     onBump?.(`${session._id}-start`, "start", display);
   }
 

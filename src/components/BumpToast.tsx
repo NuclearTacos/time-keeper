@@ -12,7 +12,7 @@ export function BumpToast({ entries, onDismiss }: Props) {
   if (items.length === 0) return null;
 
   return (
-    <div className="flex items-start justify-between gap-3 border rounded-md px-3 py-2 bg-muted/50 text-xs">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-start justify-between gap-3 border rounded-lg px-4 py-2.5 bg-background shadow-lg text-xs w-max max-w-[calc(100vw-2rem)]">
       <div className="space-y-0.5">
         {items.map((entry) => {
           const sign = entry.total > 0 ? "+" : "";
