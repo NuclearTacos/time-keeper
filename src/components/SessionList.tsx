@@ -169,8 +169,8 @@ export function SessionList({ entries, links }: Props) {
                             title={isLinked ? "Unlink boundaries" : "Link boundaries"}
                             className={`flex items-center gap-1 text-xs px-1.5 py-0.5 rounded border transition-colors ${
                               isLinked
-                                ? "border-green-500/40 text-green-600 bg-green-500/10 hover:border-red-400/40 hover:text-red-500 hover:bg-red-500/10"
-                                : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                                ? "border-green-500/40 text-green-600 bg-green-500/10 hover:border-border hover:text-muted-foreground hover:bg-muted"
+                                : "border-border text-muted-foreground hover:border-green-500/30 hover:text-green-600 hover:bg-green-500/5"
                             }`}
                           >
                             {isLinked && <Link2 size={10} />}
