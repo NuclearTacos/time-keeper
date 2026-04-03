@@ -71,9 +71,9 @@ export function SessionList({ entries, links }: Props) {
 
   return (
     <div className="space-y-4">
-      {[...byDate.entries()].map(([date, dayEntries]) => {
+      {[...byDate.entries()].reverse().map(([date, dayEntries]) => {
         const sorted = [...dayEntries].sort(
-          (a, b) => a.session.startTime - b.session.startTime
+          (a, b) => b.session.startTime - a.session.startTime
         );
         return (
           <div key={date}>
@@ -85,8 +85,9 @@ export function SessionList({ entries, links }: Props) {
                 const duration = session.endTime
                   ? formatDurationMs(session.endTime - session.startTime)
                   : null;
+                // In descending order, sorted[i+1] is the earlier (ending) session
                 const next = sorted[i + 1]?.session;
-                const link = next ? findLink(session, next, links) : undefined;
+                const link = next ? findLink(next, session, links) : undefined;
                 const isLinked = !!link;
 
                 return (
