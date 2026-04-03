@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
+import { Link2 } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -92,15 +93,38 @@ export function SessionList({ entries, links }: Props) {
 
                 return (
                   <li key={session._id} className="py-2 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium truncate">
                         {task?.name ?? "Unknown task"}
                       </p>
-                      {duration && (
-                        <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
-                          {duration}
-                        </span>
-                      )}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        {duration && (
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {duration}
+                          </span>
+                        )}
+                        {next && next.endTime !== undefined && (
+                          <button
+                            onClick={() =>
+                              isLinked
+                                ? deleteLink({ linkId: link!._id })
+                                : createLink({
+                                    endSessionId: next._id,
+                                    startSessionId: session._id,
+                                  })
+                            }
+                            title={isLinked ? "Unlink boundaries" : "Link boundaries"}
+                            className={`flex items-center gap-1 text-xs px-1.5 py-0.5 rounded border transition-colors ${
+                              isLinked
+                                ? "border-green-500/40 text-green-600 bg-green-500/10 hover:border-red-400/40 hover:text-red-500 hover:bg-red-500/10"
+                                : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                            }`}
+                          >
+                            {isLinked && <Link2 size={10} />}
+                            {isLinked ? "linked" : "link"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
@@ -148,30 +172,6 @@ export function SessionList({ entries, links }: Props) {
                         </div>
                       )}
                     </div>
-                    {next && next.endTime !== undefined && (
-                      <div className="flex items-center gap-2 pt-1">
-                        <div className="flex-1 border-t border-dashed border-border" />
-                        <button
-                          onClick={() =>
-                            isLinked
-                              ? deleteLink({ linkId: link!._id })
-                              : createLink({
-                                  endSessionId: next._id,
-                                  startSessionId: session._id,
-                                })
-                          }
-                          title={isLinked ? "Unlink boundaries" : "Link boundaries"}
-                          className={`text-xs px-2 py-0.5 rounded border transition-colors ${
-                            isLinked
-                              ? "border-foreground/40 text-foreground hover:border-destructive hover:text-destructive"
-                              : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
-                          }`}
-                        >
-                          {isLinked ? "linked" : "link"}
-                        </button>
-                        <div className="flex-1 border-t border-dashed border-border" />
-                      </div>
-                    )}
                   </li>
                 );
               })}
