@@ -35,8 +35,8 @@ export default function ReportPage() {
   const [sprintFrom, setSprintFrom] = useState(todayStr);
   const [sprintTo, setSprintTo] = useState(todayStr);
 
-  const now = Date.now();
   const todayFromMs = startOfDay(todayStr);
+  const todayToMs = endOfDay(todayStr);
 
   const fromTime =
     tab === "today"
@@ -47,9 +47,9 @@ export default function ReportPage() {
 
   const toTime =
     tab === "today"
-      ? now
+      ? todayToMs
       : tab === "week"
-      ? now
+      ? todayToMs
       : endOfDay(sprintTo);
 
   const rawEntries = useQuery(api.sessions.getSessionsInRange, { fromTime, toTime });
@@ -74,10 +74,9 @@ export default function ReportPage() {
   const timelineData = useMemo(
     () =>
       entries && tab === "today"
-        ? buildTimelineData(entries, todayFromMs, now)
+        ? buildTimelineData(entries, todayFromMs, todayToMs)
         : [],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [entries, tab, todayFromMs]
+    [entries, tab, todayFromMs, todayToMs]
   );
   const heatmapData = useMemo(
     () => (entries ? buildHeatmapData(entries, fromTime, toTime) : []),
