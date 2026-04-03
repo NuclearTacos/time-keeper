@@ -190,7 +190,7 @@ export function DayTimeline({ sessions, colorMap, dayStart, hierarchy }: Props) 
 
             {/* Track */}
             <div
-              className="relative bg-muted/30 rounded mb-1"
+              className={cn("relative bg-muted/30 rounded mb-1 transition-opacity", isExpanded && "opacity-20")}
               style={{ height: rowHeight }}
             >
               {renderBlocks(tagSessions, rowHeight)}
