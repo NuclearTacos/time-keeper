@@ -13,12 +13,10 @@ export default function TagsPage() {
   const renameTag = useMutation(api.tasks.renameTag);
   const deleteTag = useMutation(api.tasks.deleteTag);
 
-  // Local drafts for supertag inputs: tag → value
   const [supertagDrafts, setSupertagDrafts] = useState<Record<string, string>>({});
-  // Local drafts for tag name editing: tag → value
   const [nameDrafts, setNameDrafts] = useState<Record<string, string>>({});
-  // Which tag names are being edited
   const [editingName, setEditingName] = useState<Record<string, boolean>>({});
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   if (knownTags === undefined || hierarchy === undefined) {
     return (
@@ -71,14 +69,12 @@ export default function TagsPage() {
         ) : (
           <ul className="divide-y">
             {knownTags.map((tag) => {
-              const supertag = supertagMap.get(tag);
               const supertagDraft = getSupertagDraft(tag);
               const isEditingName = editingName[tag];
               const nameDraft = nameDrafts[tag] ?? tag;
 
               return (
                 <li key={tag} className="flex items-center gap-3 py-2">
-                  {/* Tag name — click to edit */}
                   {isEditingName ? (
                     <input
                       autoFocus
@@ -109,7 +105,6 @@ export default function TagsPage() {
 
                   <span className="text-xs text-muted-foreground shrink-0">→</span>
 
-                  {/* Supertag input */}
                   <input
                     value={supertagDraft}
                     onChange={(e) => setSupertagDrafts((d) => ({ ...d, [tag]: e.target.value }))}
@@ -125,14 +120,9 @@ export default function TagsPage() {
                     className="flex-1 text-sm bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 placeholder:text-muted-foreground/40"
                   />
 
-                  {/* Delete tag */}
                   <button
-                    onClick={() => {
-                      if (confirm(`Delete tag #${tag} from all tasks?`)) {
-                        deleteTag({ tag });
-                      }
-                    }}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    onClick={() => setConfirmDelete(tag)}
+                    className="text-base text-muted-foreground hover:text-red-500 transition-colors shrink-0 leading-none"
                     title="Delete tag"
                   >
                     ×
@@ -143,6 +133,38 @@ export default function TagsPage() {
           </ul>
         )}
       </main>
+
+      {/* Delete confirmation modal */}
+      {confirmDelete !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmDelete(null); }}
+        >
+          <div className="bg-background border rounded-lg p-4 w-full max-w-xs mx-4 space-y-3 shadow-lg">
+            <h2 className="text-sm font-semibold">Delete tag</h2>
+            <p className="text-sm text-muted-foreground">
+              Remove <span className="text-foreground font-medium">#{confirmDelete}</span> from all tasks?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteTag({ tag: confirmDelete });
+                  setConfirmDelete(null);
+                }}
+                className="text-sm border border-red-500/40 text-red-500 rounded px-3 py-1 hover:bg-red-500/10 transition-colors"
+              >
+                delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
