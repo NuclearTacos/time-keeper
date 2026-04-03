@@ -19,10 +19,10 @@ export function NavBar() {
             timer
           </Link>
           <Link
-            href="/review"
-            className={pathname === "/review" ? "font-semibold" : "text-muted-foreground hover:text-foreground transition-colors"}
+            href="/report"
+            className={pathname === "/report" ? "font-semibold" : "text-muted-foreground hover:text-foreground transition-colors"}
           >
-            review
+            report
           </Link>
           <Link
             href="/sessions"

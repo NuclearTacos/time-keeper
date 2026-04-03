@@ -20,7 +20,8 @@
       "Bash(npx tsc:*)",
       "Bash(node -e \"require\\('typescript'\\).createProgram\\(['middleware.ts'], {noEmit: true, strict: true}\\)\")",
       "Bash(node --stack-size=65536 node_modules/.bin/next build)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
     ]
   }
 }
