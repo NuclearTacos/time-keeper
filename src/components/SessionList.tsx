@@ -148,7 +148,7 @@ export function SessionList({ entries, links }: Props) {
                         </div>
                       )}
                     </div>
-                    {next && session.endTime !== undefined && (
+                    {next && next.endTime !== undefined && (
                       <div className="flex items-center gap-2 pt-1">
                         <div className="flex-1 border-t border-dashed border-border" />
                         <button
