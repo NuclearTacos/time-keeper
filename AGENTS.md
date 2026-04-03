@@ -10,4 +10,4 @@ Do not add `Co-Authored-By` or any self-attribution to commit messages.
 
 # Convex
 
-`convex/_generated/` is committed to the repo. Whenever you add or change Convex functions or schema, run `npx convex dev` locally and stage the updated `_generated/` files alongside the function changes. Vercel builds just run `npx next build` — the generated files must already be present in the repo.
+`convex/_generated/` is committed to the repo. Whenever you add or change Convex functions or schema, run `npx convex dev` locally and stage the updated `_generated/` files alongside the function changes. Vercel builds run `npx convex deploy` (which deploys schema/functions to Convex) followed by `npx next build`.
