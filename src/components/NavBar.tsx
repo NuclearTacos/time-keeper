@@ -24,6 +24,12 @@ export function NavBar() {
           >
             review
           </Link>
+          <Link
+            href="/sessions"
+            className={pathname === "/sessions" ? "font-semibold" : "text-muted-foreground hover:text-foreground transition-colors"}
+          >
+            sessions
+          </Link>
         </div>
         <button
           onClick={() => signOut()}

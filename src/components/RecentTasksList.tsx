@@ -8,7 +8,8 @@ import { formatDuration } from "@/lib/formatDuration";
 import { setLastUndo } from "@/lib/undo";
 
 export function RecentTasksList() {
-  const recentTasks = useQuery(api.sessions.getRecentTasks, { limit: 10 });
+  const startOfToday = getStartOfToday();
+  const recentTasks = useQuery(api.sessions.getRecentTasks, { limit: 10, startOfToday });
   const activeData = useQuery(api.sessions.getActiveSession);
   const startSession = useMutation(api.sessions.startSession);
   const updateTask = useMutation(api.tasks.updateTask);
@@ -25,7 +26,7 @@ export function RecentTasksList() {
   const visibleTasks = recentTasks.filter(({ task }) => task && task._id !== activeTaskId);
 
   if (visibleTasks.length === 0) {
-    return <p className="text-sm text-muted-foreground">No tasks yet.</p>;
+    return <p className="text-sm text-muted-foreground">No tasks today.</p>;
   }
 
   function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[] }) {
@@ -126,6 +127,11 @@ export function RecentTasksList() {
       })}
     </ul>
   );
+}
+
+function getStartOfToday(): number {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 }
 
 function formatTimeAgo(epochMs: number): string {

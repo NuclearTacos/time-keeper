@@ -20,7 +20,7 @@ export const getActiveSession = query({
 });
 
 export const getRecentTasks = query({
-  args: { limit: v.optional(v.number()) },
+  args: { limit: v.optional(v.number()), startOfToday: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
@@ -28,7 +28,12 @@ export const getRecentTasks = query({
 
     const sessions = await ctx.db
       .query("sessions")
-      .withIndex("by_user_and_start", (q) => q.eq("userId", userId))
+      .withIndex("by_user_and_start", (q) => {
+        const base = q.eq("userId", userId);
+        return args.startOfToday !== undefined
+          ? base.gte("startTime", args.startOfToday)
+          : base;
+      })
       .order("desc")
       .take(100);
 
@@ -93,8 +98,9 @@ export const startSession = mutation({
         q.eq("userId", userId).eq("endTime", undefined)
       )
       .first();
+    const now = Date.now();
     if (activeSession) {
-      await ctx.db.patch(activeSession._id, { endTime: Date.now() });
+      await ctx.db.patch(activeSession._id, { endTime: now });
     }
 
     // Resolve taskId
@@ -105,18 +111,29 @@ export const startSession = mutation({
         userId,
         name: args.name,
         tags: args.tags ?? [],
-        createdAt: Date.now(),
+        createdAt: now,
       });
     } else {
       const task = await ctx.db.get(taskId);
       if (!task || task.userId !== userId) throw new Error("Task not found");
     }
 
-    return await ctx.db.insert("sessions", {
+    const newSessionId = await ctx.db.insert("sessions", {
       taskId,
       userId,
-      startTime: Date.now(),
+      startTime: now,
     });
+
+    // Create an explicit link between the stopped session and the new one
+    if (activeSession) {
+      await ctx.db.insert("sessionLinks", {
+        userId,
+        endSessionId: activeSession._id,
+        startSessionId: newSessionId,
+      });
+    }
+
+    return newSessionId;
   },
 });
 
@@ -137,36 +154,110 @@ export const adjustSessionTime = mutation({
 
     if (args.boundary === "start") {
       const newStart = session.startTime + deltaMs;
-      // Find the session that ends closest before this one, clamp its end if needed
-      const prevSessions = await ctx.db
-        .query("sessions")
-        .withIndex("by_user_and_start", (q) =>
-          q.eq("userId", userId).lt("startTime", session.startTime)
-        )
-        .order("desc")
-        .take(1);
-      const prev = prevSessions[0];
-      if (prev && prev.endTime !== undefined && prev.endTime > newStart) {
-        await ctx.db.patch(prev._id, { endTime: newStart });
+      // If this start is linked, move the partner's end by the same delta
+      const link = await ctx.db
+        .query("sessionLinks")
+        .withIndex("by_start_session", (q) => q.eq("startSessionId", args.sessionId))
+        .first();
+      if (link) {
+        const partner = await ctx.db.get(link.endSessionId);
+        if (partner && partner.endTime !== undefined) {
+          await ctx.db.patch(link.endSessionId, { endTime: partner.endTime + deltaMs });
+        }
       }
       await ctx.db.patch(args.sessionId, { startTime: newStart });
     } else {
       if (session.endTime === undefined) throw new Error("Active session has no end time");
       const newEnd = session.endTime + deltaMs;
-      // Find the session that starts closest after this one, push its start if needed
-      const nextSessions = await ctx.db
-        .query("sessions")
-        .withIndex("by_user_and_start", (q) =>
-          q.eq("userId", userId).gt("startTime", session.startTime)
-        )
-        .order("asc")
-        .take(1);
-      const next = nextSessions[0];
-      if (next && next.startTime < newEnd) {
-        await ctx.db.patch(next._id, { startTime: newEnd });
+      // If this end is linked, move the partner's start by the same delta
+      const link = await ctx.db
+        .query("sessionLinks")
+        .withIndex("by_end_session", (q) => q.eq("endSessionId", args.sessionId))
+        .first();
+      if (link) {
+        const partner = await ctx.db.get(link.startSessionId);
+        if (partner) {
+          await ctx.db.patch(link.startSessionId, { startTime: partner.startTime + deltaMs });
+        }
       }
       await ctx.db.patch(args.sessionId, { endTime: newEnd });
     }
+  },
+});
+
+export const getLinksInRange = query({
+  args: { fromTime: v.number(), toTime: v.number() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_user_and_start", (q) =>
+        q.eq("userId", userId).gte("startTime", args.fromTime)
+      )
+      .filter((q) => q.lte(q.field("startTime"), args.toTime))
+      .collect();
+
+    const sessionIdSet = new Set(sessions.map((s) => s._id as string));
+
+    const allLinks = await ctx.db
+      .query("sessionLinks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    return allLinks.filter(
+      (l) =>
+        sessionIdSet.has(l.endSessionId as string) ||
+        sessionIdSet.has(l.startSessionId as string)
+    );
+  },
+});
+
+export const createSessionLink = mutation({
+  args: {
+    endSessionId: v.id("sessions"),
+    startSessionId: v.id("sessions"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Verify ownership
+    const endSession = await ctx.db.get(args.endSessionId);
+    const startSession = await ctx.db.get(args.startSessionId);
+    if (!endSession || endSession.userId !== userId) throw new Error("Session not found");
+    if (!startSession || startSession.userId !== userId) throw new Error("Session not found");
+
+    // Remove any existing links for these boundaries first
+    const existingByEnd = await ctx.db
+      .query("sessionLinks")
+      .withIndex("by_end_session", (q) => q.eq("endSessionId", args.endSessionId))
+      .first();
+    if (existingByEnd) await ctx.db.delete(existingByEnd._id);
+
+    const existingByStart = await ctx.db
+      .query("sessionLinks")
+      .withIndex("by_start_session", (q) => q.eq("startSessionId", args.startSessionId))
+      .first();
+    if (existingByStart) await ctx.db.delete(existingByStart._id);
+
+    return await ctx.db.insert("sessionLinks", {
+      userId,
+      endSessionId: args.endSessionId,
+      startSessionId: args.startSessionId,
+    });
+  },
+});
+
+export const deleteSessionLink = mutation({
+  args: { linkId: v.id("sessionLinks") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const link = await ctx.db.get(args.linkId);
+    if (!link || link.userId !== userId) throw new Error("Not found");
+    await ctx.db.delete(args.linkId);
   },
 });
 

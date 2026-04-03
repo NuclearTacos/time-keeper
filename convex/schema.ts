@@ -27,4 +27,16 @@ export default defineSchema({
     .index("by_task", ["taskId"])
     .index("by_user_active", ["userId", "endTime"])
     .index("by_user_and_start", ["userId", "startTime"]),
+
+  // Links between the end of one session and the start of another.
+  // Created automatically when starting a new task stops the previous one.
+  // When linked, bumping one boundary also moves the other.
+  sessionLinks: defineTable({
+    userId: v.id("users"),
+    endSessionId: v.id("sessions"),   // session whose endTime is linked
+    startSessionId: v.id("sessions"), // session whose startTime is linked
+  })
+    .index("by_user", ["userId"])
+    .index("by_end_session", ["endSessionId"])
+    .index("by_start_session", ["startSessionId"]),
 });
