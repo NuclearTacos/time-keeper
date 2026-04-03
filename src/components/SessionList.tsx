@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { useMutation } from "convex/react";
 import { Link2 } from "lucide-react";
 import { api } from "../../convex/_generated/api";
@@ -81,7 +82,7 @@ export function SessionList({ entries, links }: Props) {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               {date}
             </p>
-            <ul className="divide-y">
+            <ul>
               {sorted.map(({ session, task }, i) => {
                 const duration = session.endTime
                   ? formatDurationMs(session.endTime - session.startTime)
@@ -90,26 +91,78 @@ export function SessionList({ entries, links }: Props) {
                 const next = sorted[i + 1]?.session;
                 const link = next ? findLink(next, session, links) : undefined;
                 const isLinked = !!link;
+                const showLinkToggle = !!(next && next.endTime !== undefined);
 
                 return (
-                  <li key={session._id} className="py-2 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium truncate">
-                        {task?.name ?? "Unknown task"}
-                      </p>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
+                  <Fragment key={session._id}>
+                    <li className="py-2 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium truncate">
+                          {task?.name ?? "Unknown task"}
+                        </p>
                         {duration && (
-                          <span className="text-xs text-muted-foreground tabular-nums">
+                          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
                             {duration}
                           </span>
                         )}
-                        {next && next.endTime !== undefined && (
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">start</p>
+                          <p className="text-xs tabular-nums">{formatTime(session.startTime)}</p>
+                          <div className="flex gap-1">
+                            {BUMP_OPTIONS.map((d) => (
+                              <button
+                                key={d}
+                                onClick={() =>
+                                  adjustSessionTime({
+                                    sessionId: session._id,
+                                    boundary: "start",
+                                    deltaMinutes: d,
+                                  })
+                                }
+                                className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
+                              >
+                                {d > 0 ? `+${d}` : d}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        {session.endTime !== undefined && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">end</p>
+                            <p className="text-xs tabular-nums">{formatTime(session.endTime)}</p>
+                            <div className="flex gap-1">
+                              {BUMP_OPTIONS.map((d) => (
+                                <button
+                                  key={d}
+                                  onClick={() =>
+                                    adjustSessionTime({
+                                      sessionId: session._id,
+                                      boundary: "end",
+                                      deltaMinutes: d,
+                                    })
+                                  }
+                                  className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
+                                >
+                                  {d > 0 ? `+${d}` : d}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                    {i < sorted.length - 1 && (
+                      <li className="flex items-center gap-2">
+                        <div className="flex-1 border-t border-border" />
+                        {showLinkToggle && (
                           <button
                             onClick={() =>
                               isLinked
                                 ? deleteLink({ linkId: link!._id })
                                 : createLink({
-                                    endSessionId: next._id,
+                                    endSessionId: next!._id,
                                     startSessionId: session._id,
                                   })
                             }
@@ -124,55 +177,10 @@ export function SessionList({ entries, links }: Props) {
                             {isLinked ? "linked" : "link"}
                           </button>
                         )}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">start</p>
-                        <p className="text-xs tabular-nums">{formatTime(session.startTime)}</p>
-                        <div className="flex gap-1">
-                          {BUMP_OPTIONS.map((d) => (
-                            <button
-                              key={d}
-                              onClick={() =>
-                                adjustSessionTime({
-                                  sessionId: session._id,
-                                  boundary: "start",
-                                  deltaMinutes: d,
-                                })
-                              }
-                              className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
-                            >
-                              {d > 0 ? `+${d}` : d}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      {session.endTime !== undefined && (
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">end</p>
-                          <p className="text-xs tabular-nums">{formatTime(session.endTime)}</p>
-                          <div className="flex gap-1">
-                            {BUMP_OPTIONS.map((d) => (
-                              <button
-                                key={d}
-                                onClick={() =>
-                                  adjustSessionTime({
-                                    sessionId: session._id,
-                                    boundary: "end",
-                                    deltaMinutes: d,
-                                  })
-                                }
-                                className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
-                              >
-                                {d > 0 ? `+${d}` : d}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </li>
+                        <div className="flex-1 border-t border-border" />
+                      </li>
+                    )}
+                  </Fragment>
                 );
               })}
             </ul>
