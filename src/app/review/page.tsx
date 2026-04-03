@@ -21,9 +21,8 @@ function endOfDay(dateStr: string): number {
 
 export default function ReviewPage() {
   const today = toDateInputValue(new Date());
-  const sevenDaysAgo = toDateInputValue(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
-  const [fromDate, setFromDate] = useState(sevenDaysAgo);
+  const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
 
   const entries = useQuery(api.sessions.getSessionsInRange, {
