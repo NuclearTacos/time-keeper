@@ -16,6 +16,7 @@ export function RecentTasksList() {
   const [editingId, setEditingId] = useState<Id<"tasks"> | null>(null);
   const [editName, setEditName] = useState("");
   const [editTags, setEditTags] = useState("");
+  const [focusTags, setFocusTags] = useState(false);
 
   if (recentTasks === undefined) {
     return <p className="text-sm text-muted-foreground">Loading...</p>;
@@ -29,9 +30,10 @@ export function RecentTasksList() {
     return <p className="text-sm text-muted-foreground">No tasks today.</p>;
   }
 
-  function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[] }) {
+  function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[] }, focus: "name" | "tags" = "name") {
     setEditName(task.name);
     setEditTags(task.tags.map((t) => `#${t}`).join(" "));
+    setFocusTags(focus === "tags");
     setEditingId(task._id);
   }
 
@@ -80,13 +82,14 @@ export function RecentTasksList() {
                     onBlur={(e) => handleContainerBlur(e, task._id)}
                   >
                     <input
-                      autoFocus
+                      autoFocus={!focusTags}
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, task._id)}
                       className="w-full text-sm font-medium bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
                     />
                     <input
+                      autoFocus={focusTags}
                       value={editTags}
                       onChange={(e) => setEditTags(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, task._id)}
@@ -106,7 +109,7 @@ export function RecentTasksList() {
                 )}
               </div>
               {!isEditing && task.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-0.5" onClick={() => startEditing(task)}>
+                <div className="flex flex-wrap gap-1 mt-0.5" onClick={() => startEditing(task, "tags")}>
                   {task.tags.map((tag) => (
                     <span key={tag} className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
                       #{tag}
