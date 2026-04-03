@@ -125,20 +125,6 @@ export default function TagsPage() {
                     className="flex-1 text-sm bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 placeholder:text-muted-foreground/40"
                   />
 
-                  {/* Clear supertag */}
-                  {supertag && (
-                    <button
-                      onClick={() => {
-                        setSupertagDrafts((d) => ({ ...d, [tag]: "" }));
-                        removeSupertag({ tag });
-                      }}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                      title="Remove supertag"
-                    >
-                      ×
-                    </button>
-                  )}
-
                   {/* Delete tag */}
                   <button
                     onClick={() => {
@@ -146,10 +132,10 @@ export default function TagsPage() {
                         deleteTag({ tag });
                       }
                     }}
-                    className="text-xs text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
                     title="Delete tag"
                   >
-                    ␡
+                    ×
                   </button>
                 </li>
               );
