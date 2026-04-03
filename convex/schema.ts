@@ -39,4 +39,14 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_end_session", ["endSessionId"])
     .index("by_start_session", ["startSessionId"]),
+
+  // One-level tag hierarchy: a base tag can have one supertag.
+  // In reporting, subtags are rolled up to their supertag.
+  tagHierarchy: defineTable({
+    userId: v.id("users"),
+    tag: v.string(),      // base tag (lowercase, no #)
+    supertag: v.string(), // parent tag (lowercase, no #)
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_tag", ["userId", "tag"]),
 });

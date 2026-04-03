@@ -30,6 +30,12 @@ export function NavBar() {
           >
             sessions
           </Link>
+          <Link
+            href="/tags"
+            className={pathname === "/tags" ? "font-semibold" : "text-muted-foreground hover:text-foreground transition-colors"}
+          >
+            tags
+          </Link>
         </div>
         <button
           onClick={() => signOut()}

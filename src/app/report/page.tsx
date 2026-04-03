@@ -54,6 +54,12 @@ export default function ReportPage() {
 
   const rawEntries = useQuery(api.sessions.getSessionsInRange, { fromTime, toTime });
   const entries = rawEntries as SessionEntry[] | undefined;
+  const rawHierarchy = useQuery(api.tagHierarchy.getTagHierarchy);
+
+  const hierarchyMap = useMemo(
+    () => new Map((rawHierarchy ?? []).map((h) => [h.tag, h.supertag])),
+    [rawHierarchy]
+  );
 
   const taskBarData = useMemo(
     () => (entries ? buildTaskBarData(entries) : []),
@@ -64,8 +70,8 @@ export default function ReportPage() {
     [taskBarData]
   );
   const tagDonutData = useMemo(
-    () => (entries ? buildTagDonutData(entries) : []),
-    [entries]
+    () => (entries ? buildTagDonutData(entries, Date.now(), hierarchyMap) : []),
+    [entries, hierarchyMap]
   );
   const totalMs = useMemo(
     () => (entries ? computeTotalMs(entries) : 0),
@@ -74,9 +80,9 @@ export default function ReportPage() {
   const timelineData = useMemo(
     () =>
       entries && tab === "today"
-        ? buildTimelineData(entries, todayFromMs, todayToMs)
+        ? buildTimelineData(entries, todayFromMs, todayToMs, Date.now(), hierarchyMap)
         : [],
-    [entries, tab, todayFromMs, todayToMs]
+    [entries, tab, todayFromMs, todayToMs, hierarchyMap]
   );
   const heatmapData = useMemo(
     () => (entries ? buildHeatmapData(entries, fromTime, toTime) : []),

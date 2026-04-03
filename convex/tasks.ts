@@ -30,6 +30,21 @@ export const updateTask = mutation({
   },
 });
 
+export const getAllUserTags = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const tagSet = new Set<string>();
+    for (const task of tasks) for (const tag of task.tags) tagSet.add(tag);
+    return [...tagSet].sort();
+  },
+});
+
 export const getTask = query({
   args: { taskId: v.id("tasks") },
   handler: async (ctx, args) => {

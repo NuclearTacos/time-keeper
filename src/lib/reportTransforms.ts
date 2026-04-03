@@ -66,13 +66,22 @@ export function buildTaskBarData(entries: SessionEntry[], now = Date.now()): Tas
     .sort((a, b) => b.minutes - a.minutes);
 }
 
-export function buildTagDonutData(entries: SessionEntry[], now = Date.now()): TagDonutRow[] {
+function resolveTag(tag: string, hierarchy: Map<string, string>): string {
+  return hierarchy.get(tag) ?? tag;
+}
+
+export function buildTagDonutData(
+  entries: SessionEntry[],
+  now = Date.now(),
+  hierarchy: Map<string, string> = new Map()
+): TagDonutRow[] {
   const map = new Map<string, number>();
   for (const { session, task } of entries) {
     if (!task || task.tags.length === 0) continue;
     const end = session.endTime ?? now;
     const ms = Math.max(0, end - session.startTime);
-    for (const tag of task.tags) {
+    const resolved = [...new Set(task.tags.map((t) => resolveTag(t, hierarchy)))];
+    for (const tag of resolved) {
       map.set(tag, (map.get(tag) ?? 0) + ms);
     }
   }
@@ -89,17 +98,19 @@ export function buildTimelineData(
   entries: SessionEntry[],
   dayStart: number,
   dayEnd: number,
-  now = Date.now()
+  now = Date.now(),
+  hierarchy: Map<string, string> = new Map()
 ): TimelineSession[] {
   return entries
     .filter(({ task }) => task !== null)
     .map(({ session, task }) => {
       const end = session.endTime ?? now;
+      const resolved = [...new Set(task!.tags.map((t) => resolveTag(t, hierarchy)))];
       return {
         sessionId: session._id,
         taskId: task!._id,
         taskName: task!.name,
-        tags: task!.tags,
+        tags: resolved,
         startMs: session.startTime,
         endMs: end,
         durationLabel: formatDuration(end - session.startTime),
