@@ -156,6 +156,7 @@ export default function ReportPage() {
                   sessions={timelineData}
                   colorMap={colorMap}
                   dayStart={todayFromMs}
+                  hierarchy={hierarchyMap}
                 />
               </section>
             )}

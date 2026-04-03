@@ -138,7 +138,7 @@ export function ActiveTimer({ onBump }: Props) {
           )}
         </div>
         <div className="text-right shrink-0">
-          <div className="font-mono text-lg tabular-nums">{formatDuration(elapsedMs)}</div>
+          <div className="font-mono text-lg tabular-nums">{formatDuration(elapsedMs, elapsedMs < 120_000)}</div>
           <button
             onClick={() => stopSession({})}
             className="text-xs border rounded px-2 py-1 mt-1 hover:bg-muted transition-colors"

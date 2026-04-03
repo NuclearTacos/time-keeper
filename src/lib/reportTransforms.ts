@@ -31,7 +31,8 @@ export type TimelineSession = {
   sessionId: string;
   taskId: string;
   taskName: string;
-  tags: string[];
+  tags: string[];     // resolved (supertags applied)
+  rawTags: string[];  // original tags before hierarchy resolution
   startMs: number;
   endMs: number;
   durationLabel: string;
@@ -111,6 +112,7 @@ export function buildTimelineData(
         taskId: task!._id,
         taskName: task!.name,
         tags: resolved,
+        rawTags: task!.tags,
         startMs: session.startTime,
         endMs: end,
         durationLabel: formatDuration(end - session.startTime),
