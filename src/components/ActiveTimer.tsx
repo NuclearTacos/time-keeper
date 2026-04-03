@@ -5,7 +5,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
 import { setLastUndo } from "@/lib/undo";
-import { TimeBumpInput } from "@/components/TimeBumpInput";
+
+const BUMP_OPTIONS = [-15, -5, -1, 1, 5, 15];
 
 export function ActiveTimer() {
   const activeData = useQuery(api.sessions.getActiveSession);
@@ -138,14 +139,19 @@ export function ActiveTimer() {
           </button>
         </div>
       </div>
-      <div className="pt-1 border-t border-foreground/10">
-        {/* + means earlier for start (negative delta) */}
-        <TimeBumpInput
-          label="start"
-          onBump={(delta) =>
-            adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: -delta })
-          }
-        />
+      <div className="flex items-center gap-1.5 pt-1 border-t border-foreground/10">
+        <span className="text-xs text-muted-foreground shrink-0">start:</span>
+        <div className="flex gap-1">
+          {BUMP_OPTIONS.map((display) => (
+            <button
+              key={display}
+              onClick={() => adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: -display })}
+              className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
+            >
+              {display > 0 ? `+${display}` : display}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

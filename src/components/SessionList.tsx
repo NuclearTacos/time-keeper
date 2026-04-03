@@ -3,7 +3,6 @@
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { TimeBumpInput } from "@/components/TimeBumpInput";
 
 interface Session {
   _id: Id<"sessions">;
@@ -19,6 +18,8 @@ interface Entry {
 interface Props {
   entries: Entry[];
 }
+
+const BUMP_OPTIONS = [-15, -5, -1, 1, 5, 15];
 
 function formatTime(epochMs: number): string {
   return new Date(epochMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -76,29 +77,45 @@ export function SessionList({ entries }: Props) {
                       </>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    {/* + means earlier for start (negative delta) */}
-                    <TimeBumpInput
-                      label="start"
-                      onBump={(delta) =>
-                        adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: -delta })
+                  <BumpRow
+                    label="start"
+                    onBump={(display) =>
+                      adjustSessionTime({ sessionId: session._id, boundary: "start", deltaMinutes: -display })
+                    }
+                  />
+                  {session.endTime !== undefined && (
+                    <BumpRow
+                      label="end"
+                      onBump={(display) =>
+                        adjustSessionTime({ sessionId: session._id, boundary: "end", deltaMinutes: display })
                       }
                     />
-                    {session.endTime !== undefined && (
-                      <TimeBumpInput
-                        label="end"
-                        onBump={(delta) =>
-                          adjustSessionTime({ sessionId: session._id, boundary: "end", deltaMinutes: delta })
-                        }
-                      />
-                    )}
-                  </div>
+                  )}
                 </li>
               );
             })}
           </ul>
         </div>
       ))}
+    </div>
+  );
+}
+
+function BumpRow({ label, onBump }: { label: string; onBump: (display: number) => void }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs text-muted-foreground w-8 shrink-0">{label}:</span>
+      <div className="flex gap-1">
+        {BUMP_OPTIONS.map((display) => (
+          <button
+            key={display}
+            onClick={() => onBump(display)}
+            className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
+          >
+            {display > 0 ? `+${display}` : display}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
