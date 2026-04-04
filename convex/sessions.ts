@@ -185,6 +185,50 @@ export const adjustSessionTime = mutation({
   },
 });
 
+export const setSessionTime = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    boundary: v.union(v.literal("start"), v.literal("end")),
+    newTime: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const session = await ctx.db.get(args.sessionId);
+    if (!session || session.userId !== userId) throw new Error("Not found");
+
+    if (args.boundary === "start") {
+      const deltaMs = args.newTime - session.startTime;
+      const link = await ctx.db
+        .query("sessionLinks")
+        .withIndex("by_start_session", (q) => q.eq("startSessionId", args.sessionId))
+        .first();
+      if (link) {
+        const partner = await ctx.db.get(link.endSessionId);
+        if (partner && partner.endTime !== undefined) {
+          await ctx.db.patch(link.endSessionId, { endTime: partner.endTime + deltaMs });
+        }
+      }
+      await ctx.db.patch(args.sessionId, { startTime: args.newTime });
+    } else {
+      if (session.endTime === undefined) throw new Error("Active session has no end time");
+      const deltaMs = args.newTime - session.endTime;
+      const link = await ctx.db
+        .query("sessionLinks")
+        .withIndex("by_end_session", (q) => q.eq("endSessionId", args.sessionId))
+        .first();
+      if (link) {
+        const partner = await ctx.db.get(link.startSessionId);
+        if (partner) {
+          await ctx.db.patch(link.startSessionId, { startTime: partner.startTime + deltaMs });
+        }
+      }
+      await ctx.db.patch(args.sessionId, { endTime: args.newTime });
+    }
+  },
+});
+
 export const getLinksInRange = query({
   args: { fromTime: v.number(), toTime: v.number() },
   handler: async (ctx, args) => {

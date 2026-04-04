@@ -1,10 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { useMutation } from "convex/react";
 import { Link2 } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { formatTime } from "@/lib/formatTime";
+import { TimeEditModal } from "./TimeEditModal";
 
 interface Session {
   _id: Id<"sessions">;
@@ -29,10 +31,6 @@ interface Props {
 }
 
 const BUMP_OPTIONS = [-5, -1, 1, 5];
-
-function formatTime(epochMs: number): string {
-  return new Date(epochMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
 
 function formatDate(epochMs: number): string {
   return new Date(epochMs).toLocaleDateString([], { month: "short", day: "numeric" });
@@ -59,6 +57,11 @@ export function SessionList({ entries, links }: Props) {
   const adjustSessionTime = useMutation(api.sessions.adjustSessionTime);
   const createLink = useMutation(api.sessions.createSessionLink);
   const deleteLink = useMutation(api.sessions.deleteSessionLink);
+  const [editTarget, setEditTarget] = useState<{
+    sessionId: Id<"sessions">;
+    boundary: "start" | "end";
+    currentTime: number;
+  } | null>(null);
 
   if (entries.length === 0) {
     return <p className="text-sm text-muted-foreground">No sessions in this range.</p>;
@@ -109,7 +112,12 @@ export function SessionList({ entries, links }: Props) {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">start</p>
-                          <p className="text-xs tabular-nums">{formatTime(session.startTime)}</p>
+                          <button
+                            onClick={() => setEditTarget({ sessionId: session._id, boundary: "start", currentTime: session.startTime })}
+                            className="text-xs tabular-nums hover:text-foreground hover:underline cursor-pointer transition-colors text-left"
+                          >
+                            {formatTime(session.startTime)}
+                          </button>
                           <div className="flex gap-1">
                             {BUMP_OPTIONS.map((d) => (
                               <button
@@ -131,7 +139,12 @@ export function SessionList({ entries, links }: Props) {
                         {session.endTime !== undefined && (
                           <div className="space-y-1">
                             <p className="text-xs text-muted-foreground">end</p>
-                            <p className="text-xs tabular-nums">{formatTime(session.endTime)}</p>
+                            <button
+                              onClick={() => setEditTarget({ sessionId: session._id, boundary: "end", currentTime: session.endTime! })}
+                              className="text-xs tabular-nums hover:text-foreground hover:underline cursor-pointer transition-colors text-left"
+                            >
+                              {formatTime(session.endTime)}
+                            </button>
                             <div className="flex gap-1">
                               {BUMP_OPTIONS.map((d) => (
                                 <button
@@ -187,6 +200,14 @@ export function SessionList({ entries, links }: Props) {
           </div>
         );
       })}
+      {editTarget && (
+        <TimeEditModal
+          sessionId={editTarget.sessionId}
+          boundary={editTarget.boundary}
+          currentEpochMs={editTarget.currentTime}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
     </div>
   );
 }
