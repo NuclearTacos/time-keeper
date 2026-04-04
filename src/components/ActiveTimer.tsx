@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
+import { formatTime } from "@/lib/formatTime";
 import { setLastUndo } from "@/lib/undo";
+import { TimeEditModal } from "./TimeEditModal";
 
 const BUMP_OPTIONS = [-5, -1, 1, 5];
 
@@ -19,6 +21,7 @@ export function ActiveTimer({ onBump }: Props) {
   const adjustSessionTime = useMutation(api.sessions.adjustSessionTime);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const [editingStart, setEditingStart] = useState(false);
   const [editName, setEditName] = useState("");
   const [editTags, setEditTags] = useState("");
 
@@ -148,7 +151,12 @@ export function ActiveTimer({ onBump }: Props) {
         </div>
       </div>
       <div className="flex items-center gap-1.5 pt-1 border-t border-foreground/10">
-        <span className="text-xs text-muted-foreground shrink-0">start:</span>
+        <button
+          onClick={() => setEditingStart(true)}
+          className="text-xs text-muted-foreground shrink-0 hover:text-foreground hover:underline cursor-pointer transition-colors tabular-nums"
+        >
+          start: {formatTime(session.startTime)}
+        </button>
         <div className="flex gap-1">
           {BUMP_OPTIONS.map((display) => (
             <button
@@ -161,6 +169,14 @@ export function ActiveTimer({ onBump }: Props) {
           ))}
         </div>
       </div>
+      {editingStart && (
+        <TimeEditModal
+          sessionId={session._id}
+          boundary="start"
+          currentEpochMs={session.startTime}
+          onClose={() => setEditingStart(false)}
+        />
+      )}
     </div>
   );
 }
