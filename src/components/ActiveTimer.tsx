@@ -24,6 +24,7 @@ export function ActiveTimer({ onBump }: Props) {
   const adjustSessionTime = useMutation(api.sessions.adjustSessionTime);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const [focusTags, setFocusTags] = useState(false);
   const [editingStart, setEditingStart] = useState(false);
   const [editName, setEditName] = useState("");
   const [editTags, setEditTags] = useState("");
@@ -65,10 +66,11 @@ export function ActiveTimer({ onBump }: Props) {
   const { task } = activeData;
   const session = activeData.session;
 
-  function startEditing() {
+  function startEditing(focus: "name" | "tags" = "name") {
     if (!task) return;
     setEditName(task.name);
     setEditTags(task.tags.map((t) => `#${t}`).join(" "));
+    setFocusTags(focus === "tags");
     setIsEditing(true);
   }
 
@@ -141,7 +143,7 @@ export function ActiveTimer({ onBump }: Props) {
             {isEditing ? (
               <div className="flex-1 space-y-1" onBlur={handleContainerBlur}>
                 <input
-                  autoFocus
+                  autoFocus={!focusTags}
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -150,6 +152,7 @@ export function ActiveTimer({ onBump }: Props) {
                 <div className="relative">
                   <input
                     ref={tagInputRef}
+                    autoFocus={focusTags}
                     value={editTags}
                     onChange={(e) => { setEditTags(e.target.value); trackTagCursor(e); }}
                     onKeyDown={handleTagKeyDown}
@@ -170,14 +173,14 @@ export function ActiveTimer({ onBump }: Props) {
             ) : (
               <span
                 className="font-semibold cursor-pointer hover:text-muted-foreground transition-colors"
-                onClick={startEditing}
+                onClick={() => startEditing()}
               >
                 {task?.name ?? "Unknown task"}
               </span>
             )}
           </div>
           {!isEditing && task && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1" onClick={startEditing}>
+            <div className="flex flex-wrap gap-1 mt-1" onClick={() => startEditing("tags")}>
               {task.tags.map((tag) => (
                 <span
                   key={tag}
