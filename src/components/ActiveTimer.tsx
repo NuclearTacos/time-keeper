@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
 import { formatTime } from "@/lib/formatTime";
 import { setLastUndo } from "@/lib/undo";
+import { useTagSuggestions } from "@/lib/useTagSuggestions";
+import { getHashTokenAtCursor } from "@/lib/getHashTokenAtCursor";
+import { TagSuggestionDropdown } from "./ui/tag-suggestion-dropdown";
 import { TimeEditModal } from "./TimeEditModal";
 
 const BUMP_OPTIONS = [-5, -1, 1, 5];
@@ -24,6 +27,11 @@ export function ActiveTimer({ onBump }: Props) {
   const [editingStart, setEditingStart] = useState(false);
   const [editName, setEditName] = useState("");
   const [editTags, setEditTags] = useState("");
+  const [tagCursorPos, setTagCursorPos] = useState(0);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+
+  const { isOpen: tagSugOpen, suggestions: tagSuggestions, highlightedIndex: tagHlIndex, handleKeyDown: tagHookKeyDown, selectTag: tagSelectTag } =
+    useTagSuggestions({ mode: "hash", inputValue: editTags, cursorPosition: tagCursorPos });
 
   useEffect(() => {
     if (!activeData?.session) {
@@ -80,9 +88,38 @@ export function ActiveTimer({ onBump }: Props) {
     setIsEditing(false);
   }
 
+  function insertTagIntoEdit(tag: string) {
+    const token = getHashTokenAtCursor(editTags, tagCursorPos);
+    if (!token) return;
+    const before = editTags.slice(0, token.startIndex);
+    const after = editTags.slice(token.endIndex);
+    const insertion = `#${tag} `;
+    const newValue = before + insertion + after;
+    const newCursor = before.length + insertion.length;
+    setEditTags(newValue);
+    setTagCursorPos(newCursor);
+    requestAnimationFrame(() => {
+      tagInputRef.current?.setSelectionRange(newCursor, newCursor);
+    });
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") saveEdit();
     if (e.key === "Escape") setIsEditing(false);
+  }
+
+  function handleTagKeyDown(e: React.KeyboardEvent) {
+    const result = tagHookKeyDown(e);
+    if (result.selectedTag) {
+      insertTagIntoEdit(result.selectedTag);
+      return;
+    }
+    if (result.handled) return;
+    handleKeyDown(e);
+  }
+
+  function trackTagCursor(e: React.SyntheticEvent<HTMLInputElement>) {
+    setTagCursorPos(e.currentTarget.selectionStart ?? 0);
   }
 
   function handleContainerBlur(e: React.FocusEvent) {
@@ -110,13 +147,25 @@ export function ActiveTimer({ onBump }: Props) {
                   onKeyDown={handleKeyDown}
                   className="w-full text-sm font-semibold bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
                 />
-                <input
-                  value={editTags}
-                  onChange={(e) => setEditTags(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="tags: #tag1 #tag2"
-                  className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
-                />
+                <div className="relative">
+                  <input
+                    ref={tagInputRef}
+                    value={editTags}
+                    onChange={(e) => { setEditTags(e.target.value); trackTagCursor(e); }}
+                    onKeyDown={handleTagKeyDown}
+                    onClick={trackTagCursor}
+                    onKeyUp={trackTagCursor}
+                    placeholder="tags: #tag1 #tag2"
+                    className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
+                  />
+                  {tagSugOpen && (
+                    <TagSuggestionDropdown
+                      suggestions={tagSuggestions}
+                      highlightedIndex={tagHlIndex}
+                      onSelect={(tag) => { tagSelectTag(tag); insertTagIntoEdit(tag); }}
+                    />
+                  )}
+                </div>
               </div>
             ) : (
               <span
