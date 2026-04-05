@@ -229,11 +229,13 @@ export function SessionList({ entries, links }: Props) {
               <div className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-red-500/10">
                 <AlertTriangle size={18} className="text-red-500" />
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <h2 className="text-sm font-semibold">Delete session</h2>
-                <p className="text-sm text-muted-foreground">
-                  This will permanently delete the <span className="text-foreground font-medium">{confirmDelete.taskName}</span> session ({formatTime(confirmDelete.startTime)}{confirmDelete.endTime ? ` – ${formatTime(confirmDelete.endTime)}` : ""}).
-                </p>
+                <p className="text-sm text-muted-foreground">This will permanently delete this session.</p>
+                <div className="text-sm">
+                  <p className="font-medium">{confirmDelete.taskName}</p>
+                  <p className="text-muted-foreground">{formatTime(confirmDelete.startTime)}{confirmDelete.endTime ? ` – ${formatTime(confirmDelete.endTime)}` : ""}</p>
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-5 pt-4 border-t">
