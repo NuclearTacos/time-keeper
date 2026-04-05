@@ -8,6 +8,7 @@ import { TaskBarChart } from "@/components/report/TaskBarChart";
 import { TagDonutChart } from "@/components/report/TagDonutChart";
 import { DayTimeline } from "@/components/report/DayTimeline";
 import { DaysHeatmap } from "@/components/report/DaysHeatmap";
+import { SprintPanel } from "@/components/report/SprintPanel";
 import { formatDuration } from "@/lib/formatDuration";
 import {
   toDateInputValue,
@@ -112,26 +113,13 @@ export default function ReportPage() {
           ))}
         </div>
 
-        {/* Sprint date picker */}
+        {/* Sprint selector */}
         {tab === "sprint" && (
-          <div className="flex items-center gap-2 text-sm">
-            <input
-              type="date"
-              value={sprintFrom}
-              max={sprintTo}
-              onChange={(e) => setSprintFrom(e.target.value)}
-              className="border rounded px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-            <span className="text-muted-foreground">to</span>
-            <input
-              type="date"
-              value={sprintTo}
-              min={sprintFrom}
-              max={todayStr}
-              onChange={(e) => setSprintTo(e.target.value)}
-              className="border rounded px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-          </div>
+          <SprintPanel
+            sprintFrom={sprintFrom}
+            sprintTo={sprintTo}
+            onChange={(from, to) => { setSprintFrom(from); setSprintTo(to); }}
+          />
         )}
 
         {entries === undefined ? (

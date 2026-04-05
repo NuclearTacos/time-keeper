@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as feedback from "../feedback.js";
 import type * as http from "../http.js";
 import type * as sessions from "../sessions.js";
+import type * as sprints from "../sprints.js";
 import type * as tagColors from "../tagColors.js";
 import type * as tagHierarchy from "../tagHierarchy.js";
 import type * as tasks from "../tasks.js";
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   http: typeof http;
   sessions: typeof sessions;
+  sprints: typeof sprints;
   tagColors: typeof tagColors;
   tagHierarchy: typeof tagHierarchy;
   tasks: typeof tasks;
