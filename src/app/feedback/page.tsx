@@ -37,8 +37,18 @@ export default function FeedbackPage() {
         ) : (
           <ul className="space-y-3">
             {entries.map((entry) => (
-              <li key={entry._id} className="border rounded p-3 space-y-1">
-                <p className="text-xs text-muted-foreground">{formatDate(entry.createdAt)}</p>
+              <li
+                key={entry._id}
+                className={`border rounded p-3 space-y-1 ${entry.resolved ? "opacity-50" : ""}`}
+              >
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground">{formatDate(entry.createdAt)}</p>
+                  {entry.resolved && (
+                    <span className="text-xs text-green-600 border border-green-500/30 rounded px-1.5 py-0.5 bg-green-500/10">
+                      resolved
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm whitespace-pre-wrap">{entry.text}</p>
               </li>
             ))}

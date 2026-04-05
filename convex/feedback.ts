@@ -23,6 +23,14 @@ export const listFeedback = query({
   },
 });
 
+// No auth required so Claude can resolve feedback via HTTP endpoint.
+export const resolveFeedback = mutation({
+  args: { feedbackId: v.id("feedback") },
+  handler: async (ctx, { feedbackId }) => {
+    await ctx.db.patch(feedbackId, { resolved: true });
+  },
+});
+
 // No auth required so `npx convex run feedback:clearAllFeedback` works.
 export const clearAllFeedback = mutation({
   args: {},

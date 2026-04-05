@@ -44,6 +44,7 @@ export default defineSchema({
     userId: v.id("users"),
     text: v.string(),
     createdAt: v.number(),
+    resolved: v.optional(v.boolean()),
   }).index("by_created", ["createdAt"]),
 
   // One-level tag hierarchy: a base tag can have one supertag.
