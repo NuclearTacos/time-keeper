@@ -60,9 +60,10 @@ export function ActiveTagsBar({ tags, onAdd, onRemove }: Props) {
       <div className="relative">
         <input
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => setInputValue(e.target.value.toLowerCase())}
           onKeyDown={handleKeyDown}
           placeholder={tags.length === 0 ? "add tag…" : "+tag"}
+          autoCapitalize="none"
           className="bg-transparent focus:outline-none text-xs placeholder:text-muted-foreground/50 w-16 min-w-0"
         />
         {isOpen && (

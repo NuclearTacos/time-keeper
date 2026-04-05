@@ -77,6 +77,7 @@ export function NewTaskInput({ activeTags = [] }: Props) {
           onKeyUp={trackCursor}
           placeholder="New task... use #tag for tags"
           disabled={loading}
+          autoCapitalize="none"
           className="w-full border rounded-md px-3 py-2 text-sm bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
         />
         {isOpen && (

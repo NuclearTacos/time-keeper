@@ -149,11 +149,12 @@ export function RecentTasksList() {
                         ref={tagInputRef}
                         autoFocus={focusTags}
                         value={editTags}
-                        onChange={(e) => { setEditTags(e.target.value); trackTagCursor(e); }}
+                        onChange={(e) => { setEditTags(e.target.value.toLowerCase()); trackTagCursor(e); }}
                         onKeyDown={(e) => handleTagKeyDown(e, task._id)}
                         onClick={trackTagCursor}
                         onKeyUp={trackTagCursor}
                         placeholder="tags: #tag1 #tag2"
+                        autoCapitalize="none"
                         className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
                       />
                       {tagSugOpen && (
