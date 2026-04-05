@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { useTagSuggestions } from "@/lib/useTagSuggestions";
 import { TagSuggestionDropdown } from "./ui/tag-suggestion-dropdown";
+import { getTagTextClass } from "@/lib/tagColors";
 
 interface Props {
   tags: string[];
@@ -12,6 +15,7 @@ interface Props {
 
 export function ActiveTagsBar({ tags, onAdd, onRemove }: Props) {
   const [inputValue, setInputValue] = useState("");
+  const tagColors = useQuery(api.tagColors.getTagColors);
 
   const { isOpen, suggestions, highlightedIndex, handleKeyDown: hookKeyDown, selectTag } =
     useTagSuggestions({ mode: "plain", inputValue, cursorPosition: 0, existingTags: tags });
@@ -45,7 +49,7 @@ export function ActiveTagsBar({ tags, onAdd, onRemove }: Props) {
       {tags.map((tag) => (
         <span
           key={tag}
-          className="flex items-center gap-0.5 border rounded px-1.5 py-0.5"
+          className={`flex items-center gap-0.5 border rounded px-1.5 py-0.5 ${getTagTextClass(tagColors?.[tag])}`}
         >
           #{tag}
           <button

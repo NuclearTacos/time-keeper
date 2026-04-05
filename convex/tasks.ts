@@ -57,6 +57,14 @@ export const renameTag = mutation({
         await ctx.db.patch(entry._id, { supertag: newTag });
       }
     }
+    // Migrate tagColors entry
+    const colorEntry = await ctx.db
+      .query("tagColors")
+      .withIndex("by_user_and_tag", (q) => q.eq("userId", userId).eq("tag", oldTag))
+      .first();
+    if (colorEntry) {
+      await ctx.db.patch(colorEntry._id, { tag: newTag });
+    }
   },
 });
 
@@ -80,6 +88,12 @@ export const deleteTag = mutation({
       .withIndex("by_user_and_tag", (q) => q.eq("userId", userId).eq("tag", tag))
       .collect();
     for (const entry of hier) await ctx.db.delete(entry._id);
+    // Remove tagColors entry for this tag
+    const colorEntry = await ctx.db
+      .query("tagColors")
+      .withIndex("by_user_and_tag", (q) => q.eq("userId", userId).eq("tag", tag))
+      .first();
+    if (colorEntry) await ctx.db.delete(colorEntry._id);
   },
 });
 

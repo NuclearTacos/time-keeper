@@ -10,6 +10,7 @@ import { useTagSuggestions } from "@/lib/useTagSuggestions";
 import { getHashTokenAtCursor } from "@/lib/getHashTokenAtCursor";
 import { TagSuggestionDropdown } from "./ui/tag-suggestion-dropdown";
 import { TimeEditModal } from "./TimeEditModal";
+import { getTagTextClass } from "@/lib/tagColors";
 
 const BUMP_OPTIONS = [-5, -1, 1, 5];
 
@@ -19,6 +20,7 @@ interface Props {
 
 export function ActiveTimer({ onBump }: Props) {
   const activeData = useQuery(api.sessions.getActiveSession);
+  const tagColors = useQuery(api.tagColors.getTagColors);
   const stopSession = useMutation(api.sessions.stopActiveSession);
   const updateTask = useMutation(api.tasks.updateTask);
   const adjustSessionTime = useMutation(api.sessions.adjustSessionTime);
@@ -201,7 +203,7 @@ export function ActiveTimer({ onBump }: Props) {
                 <span
                   key={tag}
                   onClick={(e) => { e.stopPropagation(); startEditing("tags", tag); }}
-                  className="text-xs text-muted-foreground border rounded px-1 cursor-pointer hover:text-foreground transition-colors"
+                  className={`text-xs border rounded px-1 cursor-pointer transition-colors ${getTagTextClass(tagColors?.[tag]) || "text-muted-foreground hover:text-foreground"}`}
                 >
                   #{tag}
                 </span>
