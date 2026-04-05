@@ -30,6 +30,7 @@ export function ActiveTimer({ onBump }: Props) {
   const [editTags, setEditTags] = useState("");
   const [tagCursorPos, setTagCursorPos] = useState(0);
   const tagInputRef = useRef<HTMLInputElement>(null);
+  const clickedTagRef = useRef<string | null>(null);
 
   const { isOpen: tagSugOpen, suggestions: tagSuggestions, highlightedIndex: tagHlIndex, handleKeyDown: tagHookKeyDown, selectTag: tagSelectTag } =
     useTagSuggestions({ mode: "hash", inputValue: editTags, cursorPosition: tagCursorPos });
@@ -46,6 +47,19 @@ export function ActiveTimer({ onBump }: Props) {
     }, 1000);
     return () => clearInterval(interval);
   }, [activeData?.session?.startTime]);
+
+  useEffect(() => {
+    if (!isEditing || !clickedTagRef.current) return;
+    const tag = clickedTagRef.current;
+    clickedTagRef.current = null;
+    const needle = `#${tag}`;
+    const idx = editTags.indexOf(needle);
+    if (idx === -1) return;
+    const cursorPos = idx + needle.length;
+    setTagCursorPos(cursorPos);
+    tagInputRef.current?.focus();
+    tagInputRef.current?.setSelectionRange(cursorPos, cursorPos);
+  }, [isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (activeData === undefined) {
     return (
@@ -66,11 +80,12 @@ export function ActiveTimer({ onBump }: Props) {
   const { task } = activeData;
   const session = activeData.session;
 
-  function startEditing(focus: "name" | "tags" = "name") {
+  function startEditing(focus: "name" | "tags" = "name", clickedTag?: string) {
     if (!task) return;
     setEditName(task.name);
     setEditTags(task.tags.map((t) => `#${t}`).join(" "));
     setFocusTags(focus === "tags");
+    clickedTagRef.current = clickedTag ?? null;
     setIsEditing(true);
   }
 
@@ -184,6 +199,7 @@ export function ActiveTimer({ onBump }: Props) {
               {task.tags.map((tag) => (
                 <span
                   key={tag}
+                  onClick={(e) => { e.stopPropagation(); startEditing("tags", tag); }}
                   className="text-xs text-muted-foreground border rounded px-1 cursor-pointer hover:text-foreground transition-colors"
                 >
                   #{tag}
