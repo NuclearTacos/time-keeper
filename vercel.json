@@ -2,7 +2,9 @@
   "buildCommand": "npx convex deploy --cmd 'npx next build'",
   "git": {
     "deploymentEnabled": {
-      "main": true
+      "main": true,
+      "claude/*": false,
+      "*": false
     }
   }
 }
