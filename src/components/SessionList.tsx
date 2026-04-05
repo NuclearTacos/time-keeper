@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useMutation } from "convex/react";
-import { Link2 } from "lucide-react";
+import { Link2, Trash2 } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { formatTime } from "@/lib/formatTime";
@@ -57,11 +57,13 @@ export function SessionList({ entries, links }: Props) {
   const adjustSessionTime = useMutation(api.sessions.adjustSessionTime);
   const createLink = useMutation(api.sessions.createSessionLink);
   const deleteLink = useMutation(api.sessions.deleteSessionLink);
+  const deleteSession = useMutation(api.sessions.deleteSession);
   const [editTarget, setEditTarget] = useState<{
     sessionId: Id<"sessions">;
     boundary: "start" | "end";
     currentTime: number;
   } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ sessionId: Id<"sessions">; taskName: string; startTime: number; endTime?: number } | null>(null);
 
   if (entries.length === 0) {
     return <p className="text-sm text-muted-foreground">No sessions in this range.</p>;
@@ -98,16 +100,25 @@ export function SessionList({ entries, links }: Props) {
 
                 return (
                   <Fragment key={session._id}>
-                    <li className="py-2 space-y-2">
+                    <li className="py-2 space-y-2 group">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium truncate">
                           {task?.name ?? "Unknown task"}
                         </p>
-                        {duration && (
-                          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                            {duration}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {duration && (
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                              {duration}
+                            </span>
+                          )}
+                          <button
+                            onClick={() => setConfirmDelete({ sessionId: session._id, taskName: task?.name ?? "Unknown task", startTime: session.startTime, endTime: session.endTime })}
+                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all"
+                            title="Delete session"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
@@ -207,6 +218,38 @@ export function SessionList({ entries, links }: Props) {
           currentEpochMs={editTarget.currentTime}
           onClose={() => setEditTarget(null)}
         />
+      )}
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmDelete(null); }}
+        >
+          <div className="bg-background border rounded-lg p-4 w-full max-w-xs mx-4 space-y-3 shadow-lg">
+            <h2 className="text-sm font-semibold">Delete session</h2>
+            <p className="text-sm text-muted-foreground">
+              Delete <span className="text-foreground font-medium">{confirmDelete.taskName}</span> session ({formatTime(confirmDelete.startTime)}
+              {confirmDelete.endTime ? ` – ${formatTime(confirmDelete.endTime)}` : ""})?
+            </p>
+            <p className="text-xs text-muted-foreground">This cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteSession({ sessionId: confirmDelete.sessionId });
+                  setConfirmDelete(null);
+                }}
+                className="text-sm border border-red-500/40 text-red-500 rounded px-3 py-1 hover:bg-red-500/10 transition-colors"
+              >
+                delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -83,6 +83,40 @@ export const deleteTag = mutation({
   },
 });
 
+export const deleteTask = mutation({
+  args: { taskId: v.id("tasks") },
+  handler: async (ctx, { taskId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const task = await ctx.db.get(taskId);
+    if (!task || task.userId !== userId) throw new Error("Not found");
+
+    // Delete all sessions for this task and their sessionLinks
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_task", (q) => q.eq("taskId", taskId))
+      .collect();
+
+    for (const session of sessions) {
+      const linksByEnd = await ctx.db
+        .query("sessionLinks")
+        .withIndex("by_end_session", (q) => q.eq("endSessionId", session._id))
+        .collect();
+      for (const link of linksByEnd) await ctx.db.delete(link._id);
+
+      const linksByStart = await ctx.db
+        .query("sessionLinks")
+        .withIndex("by_start_session", (q) => q.eq("startSessionId", session._id))
+        .collect();
+      for (const link of linksByStart) await ctx.db.delete(link._id);
+
+      await ctx.db.delete(session._id);
+    }
+
+    await ctx.db.delete(taskId);
+  },
+});
+
 export const getAllUserTags = query({
   args: {},
   handler: async (ctx) => {
