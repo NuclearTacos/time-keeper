@@ -5,18 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { NavBar } from "@/components/NavBar";
 import { SessionList } from "@/components/SessionList";
-
-function toDateInputValue(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function startOfDay(dateStr: string): number {
-  return new Date(dateStr + "T00:00:00").getTime();
-}
-
-function endOfDay(dateStr: string): number {
-  return new Date(dateStr + "T23:59:59.999").getTime();
-}
+import { toDateInputValue, startOfDay, endOfDay } from "@/lib/dateUtils";
 
 export default function SessionsPage() {
   const today = toDateInputValue(new Date());
