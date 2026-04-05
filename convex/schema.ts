@@ -56,4 +56,12 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_and_tag", ["userId", "tag"]),
+
+  tagColors: defineTable({
+    userId: v.id("users"),
+    tag: v.string(),   // lowercase, no #
+    color: v.string(), // one of the palette color names
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_tag", ["userId", "tag"]),
 });

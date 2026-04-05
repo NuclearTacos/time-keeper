@@ -10,10 +10,12 @@ import { setLastUndo } from "@/lib/undo";
 import { useTagSuggestions } from "@/lib/useTagSuggestions";
 import { getHashTokenAtCursor } from "@/lib/getHashTokenAtCursor";
 import { TagSuggestionDropdown } from "./ui/tag-suggestion-dropdown";
+import { getTagTextClass } from "@/lib/tagColors";
 
 export function RecentTasksList() {
   const startOfToday = getStartOfToday();
   const recentTasks = useQuery(api.sessions.getRecentTasks, { limit: 10, startOfToday });
+  const tagColors = useQuery(api.tagColors.getTagColors);
   const activeData = useQuery(api.sessions.getActiveSession);
   const startSession = useMutation(api.sessions.startSession);
   const updateTask = useMutation(api.tasks.updateTask);
@@ -183,7 +185,7 @@ export function RecentTasksList() {
                     <span
                       key={tag}
                       onClick={(e) => { e.stopPropagation(); startEditing(task, "tags", tag); }}
-                      className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                      className={`text-xs cursor-pointer transition-colors ${getTagTextClass(tagColors?.[tag]) || "text-muted-foreground hover:text-foreground"}`}
                     >
                       #{tag}
                     </span>
