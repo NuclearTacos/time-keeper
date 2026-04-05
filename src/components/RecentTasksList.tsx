@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
@@ -22,6 +22,20 @@ export function RecentTasksList() {
   const [focusTags, setFocusTags] = useState(false);
   const [tagCursorPos, setTagCursorPos] = useState(0);
   const tagInputRef = useRef<HTMLInputElement>(null);
+  const clickedTagRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!editingId || !clickedTagRef.current) return;
+    const tag = clickedTagRef.current;
+    clickedTagRef.current = null;
+    const needle = `#${tag}`;
+    const idx = editTags.indexOf(needle);
+    if (idx === -1) return;
+    const cursorPos = idx + needle.length;
+    setTagCursorPos(cursorPos);
+    tagInputRef.current?.focus();
+    tagInputRef.current?.setSelectionRange(cursorPos, cursorPos);
+  }, [editingId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { isOpen: tagSugOpen, suggestions: tagSuggestions, highlightedIndex: tagHlIndex, handleKeyDown: tagHookKeyDown, selectTag: tagSelectTag } =
     useTagSuggestions({ mode: "hash", inputValue: editTags, cursorPosition: tagCursorPos });
@@ -38,10 +52,11 @@ export function RecentTasksList() {
     return <p className="text-sm text-muted-foreground">No tasks today.</p>;
   }
 
-  function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[] }, focus: "name" | "tags" = "name") {
+  function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[] }, focus: "name" | "tags" = "name", clickedTag?: string) {
     setEditName(task.name);
     setEditTags(task.tags.map((t) => `#${t}`).join(" "));
     setFocusTags(focus === "tags");
+    clickedTagRef.current = clickedTag ?? null;
     setEditingId(task._id);
   }
 
@@ -160,7 +175,11 @@ export function RecentTasksList() {
               {!isEditing && task.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-0.5" onClick={() => startEditing(task, "tags")}>
                   {task.tags.map((tag) => (
-                    <span key={tag} className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                    <span
+                      key={tag}
+                      onClick={(e) => { e.stopPropagation(); startEditing(task, "tags", tag); }}
+                      className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                    >
                       #{tag}
                     </span>
                   ))}
