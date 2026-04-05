@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useTagSuggestions } from "@/lib/useTagSuggestions";
+import { TagSuggestionDropdown } from "./ui/tag-suggestion-dropdown";
 
 interface Props {
   tags: string[];
@@ -11,14 +13,26 @@ interface Props {
 export function ActiveTagsBar({ tags, onAdd, onRemove }: Props) {
   const [inputValue, setInputValue] = useState("");
 
+  const { isOpen, suggestions, highlightedIndex, handleKeyDown: hookKeyDown, selectTag } =
+    useTagSuggestions({ mode: "plain", inputValue, cursorPosition: 0, existingTags: tags });
+
+  function addTag(tag: string) {
+    onAdd(tag);
+    setInputValue("");
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    const result = hookKeyDown(e);
+    if (result.selectedTag) {
+      addTag(result.selectedTag);
+      return;
+    }
+    if (result.handled) return;
+
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       const tag = inputValue.trim();
-      if (tag) {
-        onAdd(tag);
-        setInputValue("");
-      }
+      if (tag) addTag(tag);
     }
     if (e.key === "Backspace" && !inputValue && tags.length > 0) {
       onRemove(tags[tags.length - 1]);
@@ -43,13 +57,22 @@ export function ActiveTagsBar({ tags, onAdd, onRemove }: Props) {
           </button>
         </span>
       ))}
-      <input
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={tags.length === 0 ? "add tag…" : "+tag"}
-        className="bg-transparent focus:outline-none text-xs placeholder:text-muted-foreground/50 w-16 min-w-0"
-      />
+      <div className="relative">
+        <input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={tags.length === 0 ? "add tag…" : "+tag"}
+          className="bg-transparent focus:outline-none text-xs placeholder:text-muted-foreground/50 w-16 min-w-0"
+        />
+        {isOpen && (
+          <TagSuggestionDropdown
+            suggestions={suggestions}
+            highlightedIndex={highlightedIndex}
+            onSelect={(tag) => { selectTag(tag); addTag(tag); }}
+          />
+        )}
+      </div>
     </div>
   );
 }
