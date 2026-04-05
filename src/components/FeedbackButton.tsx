@@ -50,20 +50,28 @@ export function FeedbackButton() {
               rows={4}
               className="w-full text-sm bg-transparent border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring resize-none placeholder:text-muted-foreground/50"
             />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={close}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            <div className="flex items-center justify-between">
+              <a
+                href="/feedback"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={!text.trim()}
-                className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors disabled:opacity-40"
-              >
-                submit
-              </button>
+                view all
+              </a>
+              <div className="flex gap-3">
+                <button
+                  onClick={close}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={!text.trim()}
+                  className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors disabled:opacity-40"
+                >
+                  submit
+                </button>
+              </div>
             </div>
           </div>
         </div>
