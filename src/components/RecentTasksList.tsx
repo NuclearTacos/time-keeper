@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { Trash2 } from "lucide-react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
@@ -16,7 +17,9 @@ export function RecentTasksList() {
   const activeData = useQuery(api.sessions.getActiveSession);
   const startSession = useMutation(api.sessions.startSession);
   const updateTask = useMutation(api.tasks.updateTask);
+  const deleteTask = useMutation(api.tasks.deleteTask);
   const [editingId, setEditingId] = useState<Id<"tasks"> | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ taskId: Id<"tasks">; taskName: string } | null>(null);
   const [editName, setEditName] = useState("");
   const [editTags, setEditTags] = useState("");
   const [focusTags, setFocusTags] = useState(false);
@@ -116,6 +119,7 @@ export function RecentTasksList() {
   }
 
   return (
+    <>
     <ul className="divide-y">
       {visibleTasks.map(({ task, lastSessionStart }) => {
         if (!task) return null;
@@ -124,7 +128,7 @@ export function RecentTasksList() {
         return (
           <li
             key={task._id}
-            className="flex items-center justify-between gap-4 py-2"
+            className="flex items-center justify-between gap-4 py-2 group"
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
@@ -187,16 +191,57 @@ export function RecentTasksList() {
               )}
               <p className="text-xs text-muted-foreground mt-0.5">{ago}</p>
             </div>
-            <button
-              onClick={() => startSession({ taskId: task._id })}
-              className="shrink-0 text-xs border rounded px-2 py-1 hover:bg-muted transition-colors"
-            >
-              resume
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setConfirmDelete({ taskId: task._id, taskName: task.name })}
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all"
+                title="Delete task"
+              >
+                <Trash2 size={13} />
+              </button>
+              <button
+                onClick={() => startSession({ taskId: task._id })}
+                className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors"
+              >
+                resume
+              </button>
+            </div>
           </li>
         );
       })}
     </ul>
+    {confirmDelete && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        onClick={(e) => { if (e.target === e.currentTarget) setConfirmDelete(null); }}
+      >
+        <div className="bg-background border rounded-lg p-4 w-full max-w-xs mx-4 space-y-3 shadow-lg">
+          <h2 className="text-sm font-semibold">Delete task</h2>
+          <p className="text-sm text-muted-foreground">
+            Delete <span className="text-foreground font-medium">{confirmDelete.taskName}</span> and all its sessions?
+          </p>
+          <p className="text-xs text-muted-foreground">This cannot be undone.</p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setConfirmDelete(null)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              cancel
+            </button>
+            <button
+              onClick={() => {
+                deleteTask({ taskId: confirmDelete.taskId });
+                setConfirmDelete(null);
+              }}
+              className="text-sm border border-red-500/40 text-red-500 rounded px-3 py-1 hover:bg-red-500/10 transition-colors"
+            >
+              delete
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

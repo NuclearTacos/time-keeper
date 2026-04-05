@@ -324,3 +324,28 @@ export const stopActiveSession = mutation({
     return null;
   },
 });
+
+export const deleteSession = mutation({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, { sessionId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const session = await ctx.db.get(sessionId);
+    if (!session || session.userId !== userId) throw new Error("Not found");
+
+    // Delete any sessionLinks referencing this session
+    const linksByEnd = await ctx.db
+      .query("sessionLinks")
+      .withIndex("by_end_session", (q) => q.eq("endSessionId", sessionId))
+      .collect();
+    for (const link of linksByEnd) await ctx.db.delete(link._id);
+
+    const linksByStart = await ctx.db
+      .query("sessionLinks")
+      .withIndex("by_start_session", (q) => q.eq("startSessionId", sessionId))
+      .collect();
+    for (const link of linksByStart) await ctx.db.delete(link._id);
+
+    await ctx.db.delete(sessionId);
+  },
+});
