@@ -15,6 +15,8 @@ export default defineSchema({
   userSettings: defineTable({
     userId: v.id("users"),
     activeTags: v.array(v.string()),
+    sprintPatternDays: v.optional(v.number()),   // e.g. 14
+    sprintAnchorDate: v.optional(v.string()),    // YYYY-MM-DD, a known sprint start
   }).index("by_user", ["userId"]),
 
   sessions: defineTable({
@@ -64,4 +66,12 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_and_tag", ["userId", "tag"]),
+
+  sprints: defineTable({
+    userId: v.id("users"),
+    name: v.string(),       // e.g. "Sprint 12"
+    startDate: v.string(),  // YYYY-MM-DD, inclusive
+    endDate: v.string(),    // YYYY-MM-DD, inclusive
+    createdAt: v.number(),  // epoch ms, for ordering
+  }).index("by_user", ["userId"]),
 });

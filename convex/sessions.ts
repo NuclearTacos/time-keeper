@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { ensureSprintForTodayHelper } from "./sprints";
 
 export const getActiveSession = query({
   args: {},
@@ -132,6 +133,9 @@ export const startSession = mutation({
         startSessionId: newSessionId,
       });
     }
+
+    // Auto-create a sprint for today if a pattern is configured and none exists
+    await ensureSprintForTodayHelper(ctx, userId);
 
     return newSessionId;
   },
