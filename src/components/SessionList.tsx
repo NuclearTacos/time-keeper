@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useMutation } from "convex/react";
-import { Link2, Trash2 } from "lucide-react";
+import { Link2, Trash2, AlertTriangle } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { formatTime } from "@/lib/formatTime";
@@ -224,17 +224,22 @@ export function SessionList({ entries, links }: Props) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
           onClick={(e) => { if (e.target === e.currentTarget) setConfirmDelete(null); }}
         >
-          <div className="bg-background border rounded-lg p-4 w-full max-w-xs mx-4 space-y-3 shadow-lg">
-            <h2 className="text-sm font-semibold">Delete session</h2>
-            <p className="text-sm text-muted-foreground">
-              Delete <span className="text-foreground font-medium">{confirmDelete.taskName}</span> session ({formatTime(confirmDelete.startTime)}
-              {confirmDelete.endTime ? ` – ${formatTime(confirmDelete.endTime)}` : ""})?
-            </p>
-            <p className="text-xs text-muted-foreground">This cannot be undone.</p>
-            <div className="flex justify-end gap-3">
+          <div className="bg-background border rounded-lg p-5 w-full max-w-sm mx-4 shadow-lg">
+            <div className="flex gap-3">
+              <div className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-red-500/10">
+                <AlertTriangle size={18} className="text-red-500" />
+              </div>
+              <div className="space-y-1.5">
+                <h2 className="text-sm font-semibold">Delete session</h2>
+                <p className="text-sm text-muted-foreground">
+                  This will permanently delete the <span className="text-foreground font-medium">{confirmDelete.taskName}</span> session ({formatTime(confirmDelete.startTime)}{confirmDelete.endTime ? ` – ${formatTime(confirmDelete.endTime)}` : ""}).
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-5 pt-4 border-t">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm border rounded px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 cancel
               </button>
@@ -243,9 +248,9 @@ export function SessionList({ entries, links }: Props) {
                   deleteSession({ sessionId: confirmDelete.sessionId });
                   setConfirmDelete(null);
                 }}
-                className="text-sm border border-red-500/40 text-red-500 rounded px-3 py-1 hover:bg-red-500/10 transition-colors"
+                className="text-sm rounded px-3 py-1.5 bg-red-500 text-white hover:bg-red-600 transition-colors"
               >
-                delete
+                delete session
               </button>
             </div>
           </div>
