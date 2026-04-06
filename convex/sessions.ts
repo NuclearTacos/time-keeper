@@ -329,6 +329,45 @@ export const stopActiveSession = mutation({
   },
 });
 
+export const createSession = mutation({
+  args: {
+    taskId: v.optional(v.id("tasks")),
+    name: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    startTime: v.number(),
+    endTime: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    let taskId = args.taskId;
+    if (!taskId) {
+      if (!args.name) throw new Error("Must provide taskId or name");
+      taskId = await ctx.db.insert("tasks", {
+        userId,
+        name: args.name,
+        tags: args.tags ?? [],
+        createdAt: args.startTime,
+      });
+    } else {
+      const task = await ctx.db.get(taskId);
+      if (!task || task.userId !== userId) throw new Error("Task not found");
+    }
+
+    const newSessionId = await ctx.db.insert("sessions", {
+      taskId,
+      userId,
+      startTime: args.startTime,
+      endTime: args.endTime,
+    });
+
+    await ensureSprintForTodayHelper(ctx, userId);
+
+    return newSessionId;
+  },
+});
+
 export const deleteSession = mutation({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, { sessionId }) => {

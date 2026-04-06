@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { NavBar } from "@/components/NavBar";
 import { SessionList } from "@/components/SessionList";
+import { CreateSessionForm } from "@/components/CreateSessionForm";
 import { toDateInputValue, startOfDay, endOfDay } from "@/lib/dateUtils";
 
 export default function SessionsPage() {
@@ -44,6 +45,8 @@ export default function SessionsPage() {
             />
           </div>
         </div>
+
+        <CreateSessionForm defaultDate={fromDate} />
 
         {entries === undefined || links === undefined ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
