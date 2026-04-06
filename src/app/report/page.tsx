@@ -123,7 +123,14 @@ export default function ReportPage() {
         )}
 
         {entries === undefined ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <div className="animate-pulse space-y-5">
+            <div className="h-9 w-32 rounded bg-muted-foreground/20" />
+            <div className="h-3 w-48 rounded bg-muted-foreground/10" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="h-40 rounded bg-muted-foreground/10" />
+              <div className="h-40 rounded bg-muted-foreground/10" />
+            </div>
+          </div>
         ) : (
           <>
             {/* Total */}

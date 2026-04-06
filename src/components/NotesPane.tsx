@@ -201,6 +201,22 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
     );
   }
 
+  if (task === undefined) {
+    return (
+      <div className="border rounded-md p-4 space-y-2 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="h-3 w-24 rounded bg-muted-foreground/20" />
+          <div className="w-3.5 h-3.5 rounded bg-muted-foreground/20" />
+        </div>
+        <div className="space-y-2 pt-1">
+          <div className="h-3 rounded bg-muted-foreground/10 w-full" />
+          <div className="h-3 rounded bg-muted-foreground/10 w-4/5" />
+          <div className="h-3 rounded bg-muted-foreground/10 w-2/3" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}

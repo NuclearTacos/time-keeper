@@ -23,18 +23,7 @@ export default function TagsPage() {
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  if (knownTags === undefined || hierarchy === undefined || tagColors === undefined) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <NavBar />
-        <main className="flex-1 max-w-lg w-full mx-auto px-4 py-6">
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        </main>
-      </div>
-    );
-  }
-
-  const supertagMap = new Map(hierarchy.map((h) => [h.tag, h.supertag]));
+  const supertagMap = new Map((hierarchy ?? []).map((h) => [h.tag, h.supertag]));
 
   function getSupertagDraft(tag: string): string {
     return supertagDrafts[tag] ?? (supertagMap.get(tag) ?? "");
@@ -78,7 +67,17 @@ export default function TagsPage() {
           Click a tag name to rename it. Assign a supertag to roll it up in reporting.
         </p>
 
-        {knownTags.length === 0 ? (
+        {knownTags === undefined ? (
+          <ul className="divide-y animate-pulse">
+            {[...Array(4)].map((_, i) => (
+              <li key={i} className="py-3 flex items-center gap-3">
+                <div className="w-4 h-4 rounded-full bg-muted-foreground/20 shrink-0" />
+                <div className="h-3 rounded bg-muted-foreground/20" style={{ width: `${60 + i * 15}px` }} />
+                <div className="h-3 rounded bg-muted-foreground/10 w-16 ml-auto" />
+              </li>
+            ))}
+          </ul>
+        ) : knownTags.length === 0 ? (
           <p className="text-sm text-muted-foreground">No tags yet.</p>
         ) : (
           <ul className="divide-y">
@@ -86,7 +85,7 @@ export default function TagsPage() {
               const supertagDraft = getSupertagDraft(tag);
               const isEditingName = editingName[tag];
               const nameDraft = nameDrafts[tag] ?? tag;
-              const currentColor = tagColors[tag] as string | undefined;
+              const currentColor = tagColors?.[tag] as string | undefined;
               const isColorOpen = colorPickerOpen === tag;
 
               return (

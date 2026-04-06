@@ -144,12 +144,18 @@ export const getAllUserTags = query({
     // Build a map of taskId → tags for quick lookup
     const taskTagMap = new Map(tasks.map((t) => [t._id, t.tags]));
 
-    // Find the most recent session startTime per tag
+    // Collect all tags (including those never used in a session)
+    const allTags = new Set<string>();
+    for (const task of tasks) for (const tag of task.tags) allTags.add(tag);
+
+    // Find the most recent session startTime per tag.
+    // Take only the 500 most-recent sessions (ordered desc) to avoid a full
+    // table scan; exit early once every known tag has a lastUsed time.
     const sessions = await ctx.db
       .query("sessions")
       .withIndex("by_user_and_start", (q) => q.eq("userId", userId))
       .order("desc")
-      .collect();
+      .take(500);
 
     const tagLastUsed = new Map<string, number>();
     for (const s of sessions) {
@@ -157,11 +163,8 @@ export const getAllUserTags = query({
       for (const tag of tags) {
         if (!tagLastUsed.has(tag)) tagLastUsed.set(tag, s.startTime);
       }
+      if (tagLastUsed.size >= allTags.size) break;
     }
-
-    // Collect all tags (including those never used in a session)
-    const allTags = new Set<string>();
-    for (const task of tasks) for (const tag of task.tags) allTags.add(tag);
 
     return [...allTags].sort((a, b) => {
       const aTime = tagLastUsed.get(a) ?? 0;
