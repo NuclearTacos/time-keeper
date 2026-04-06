@@ -75,17 +75,17 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
   const updateTaskNotes = useMutation(api.tasks.updateTaskNotes);
 
   const [draft, setDraft] = useState("");
-  const [isPreview, setIsPreview] = useState(false);
+  const [isPreview, setIsPreview] = useState(true);
   const prevTaskIdRef = useRef<Id<"tasks"> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Reset preview mode when switching tasks
+  // Reset to view mode when switching tasks
   useEffect(() => {
     if (taskId !== prevTaskIdRef.current) {
       prevTaskIdRef.current = taskId;
-      setIsPreview(false);
+      setIsPreview(true);
     }
   }, [taskId]);
 
@@ -95,6 +95,13 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
       setDraft(task?.notes ?? "");
     }
   }, [task?._id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep draft in sync with server while in view mode (e.g. edits from another device)
+  useEffect(() => {
+    if (isPreview && task !== undefined) {
+      setDraft(task?.notes ?? "");
+    }
+  }, [task?.notes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-expand textarea; useLayoutEffect so scrollHeight is accurate
   useLayoutEffect(() => {
@@ -119,10 +126,46 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
     }
   }
 
+  // Toggle a checkbox in the markdown source by index
+  function handleCheckboxToggle(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.target as HTMLInputElement;
+    const checkboxes = previewRef.current?.querySelectorAll('input[type="checkbox"]');
+    if (!checkboxes) return;
+
+    let checkboxIndex = -1;
+    checkboxes.forEach((cb, i) => { if (cb === target) checkboxIndex = i; });
+    if (checkboxIndex === -1) return;
+
+    const pattern = /- \[([ xX])\]/g;
+    let match: RegExpExecArray | null;
+    let currentIndex = 0;
+    while ((match = pattern.exec(draft)) !== null) {
+      if (currentIndex === checkboxIndex) {
+        const isChecked = match[1] !== " ";
+        const replacement = isChecked ? "- [ ]" : "- [x]";
+        const newDraft = draft.slice(0, match.index) + replacement + draft.slice(match.index + match[0].length);
+        setDraft(newDraft);
+        if (taskId) updateTaskNotes({ taskId, notes: newDraft.trim() || undefined });
+        return;
+      }
+      currentIndex++;
+    }
+  }
+
   // Click in preview → switch to edit, restoring cursor position
   function handlePreviewClick(e: React.MouseEvent) {
     // Don't intercept link clicks
     if ((e.target as HTMLElement).closest("a")) return;
+
+    // Handle checkbox clicks without leaving preview
+    const target = e.target as HTMLElement;
+    if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "checkbox") {
+      handleCheckboxToggle(e);
+      return;
+    }
 
     const el = previewRef.current;
     if (!el) { setIsPreview(false); return; }
@@ -187,11 +230,11 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
       {isPreview ? (
         <div
           ref={previewRef}
-          className="text-sm min-h-[4rem] cursor-text [&_a]:text-violet-400 [&_a]:underline [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_h1]:font-bold [&_h1]:text-base [&_h2]:font-semibold [&_h3]:font-medium [&_p]:mb-2 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
+          className="text-sm min-h-[4rem] cursor-text [&_a]:text-violet-400 [&_a]:underline [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_h1]:font-bold [&_h1]:text-base [&_h2]:font-semibold [&_h3]:font-medium [&_p]:mb-2 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_li:has(>input[type=checkbox])]:list-none [&_input[type=checkbox]]:mr-2 [&_input[type=checkbox]]:accent-violet-500 [&_input[type=checkbox]]:cursor-pointer"
           onClick={handlePreviewClick}
           dangerouslySetInnerHTML={{
             __html: draft.trim()
-              ? (marked(draft) as string)
+              ? (marked(draft) as string).replace(/ disabled=""/g, "")
               : '<p class="text-muted-foreground/50 italic text-sm">No notes yet. Click to edit.</p>',
           }}
         />
