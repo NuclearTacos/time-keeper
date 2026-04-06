@@ -46,7 +46,14 @@ export default function SessionsPage() {
         </div>
 
         {entries === undefined || links === undefined ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <ul className="divide-y animate-pulse">
+            {[65, 80, 55, 70].map((w, i) => (
+              <li key={i} className="py-3 space-y-1.5">
+                <div className="h-3.5 bg-muted-foreground/20 rounded" style={{ width: `${w}%` }} />
+                <div className="h-2.5 bg-muted-foreground/10 rounded w-24" />
+              </li>
+            ))}
+          </ul>
         ) : (
           <SessionList entries={entries} links={links} />
         )}

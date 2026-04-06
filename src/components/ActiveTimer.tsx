@@ -71,8 +71,14 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
 
   if (activeData === undefined) {
     return (
-      <div className="border rounded-md p-4 text-sm text-muted-foreground">
-        Loading...
+      <div className="border rounded-md p-4 space-y-2 animate-pulse">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-muted-foreground/20 rounded w-2/3" />
+            <div className="h-3 bg-muted-foreground/10 rounded w-1/3" />
+          </div>
+          <div className="h-7 w-16 bg-muted-foreground/20 rounded shrink-0" />
+        </div>
       </div>
     );
   }
