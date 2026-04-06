@@ -33,6 +33,15 @@ export default function Home() {
     setNotesPaneOpen(true);
   }
 
+  function handleNoteIconClick(taskId: Id<"tasks">) {
+    if (notesPaneOpen && notesTaskId === taskId) {
+      setNotesPaneOpen(false);
+    } else {
+      setSelectedTaskId(taskId);
+      setNotesPaneOpen(true);
+    }
+  }
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "z") {
@@ -63,7 +72,7 @@ export default function Home() {
           {bump.isActive && (
             <BumpToast entries={bump.entries} onDismiss={bump.dismiss} />
           )}
-          <ActiveTimer onBump={bump.recordBump} onSelectTask={handleSelectTask} />
+          <ActiveTimer onBump={bump.recordBump} onSelectTask={handleSelectTask} onNoteIconClick={handleNoteIconClick} />
           <div className="space-y-2">
             <ActiveTagsBar tags={tags} onAdd={addTag} onRemove={removeTag} />
             <NewTaskInput activeTags={tags} />
@@ -81,7 +90,7 @@ export default function Home() {
             <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               Recent
             </h2>
-            <RecentTasksList onSelectTask={handleSelectTask} />
+            <RecentTasksList onSelectTask={handleSelectTask} onNoteIconClick={handleNoteIconClick} />
           </section>
         </main>
         {/* Desktop: notes pane to the right */}

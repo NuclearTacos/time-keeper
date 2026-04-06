@@ -22,8 +22,9 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
   const [draft, setDraft] = useState("");
   const [isPreview, setIsPreview] = useState(false);
   const prevTaskIdRef = useRef<Id<"tasks"> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Sync draft when task changes
+  // Reset preview mode and draft when switching tasks
   useEffect(() => {
     if (taskId !== prevTaskIdRef.current) {
       prevTaskIdRef.current = taskId;
@@ -31,11 +32,20 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
     }
   }, [taskId]);
 
+  // Sync draft from server when task loads or changes identity
   useEffect(() => {
     if (task !== undefined) {
       setDraft(task?.notes ?? "");
     }
-  }, [task]);
+  }, [task?._id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-expand textarea whenever draft changes
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
 
   async function handleBlur() {
     if (!taskId) return;
@@ -86,7 +96,7 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
 
       {isPreview ? (
         <div
-          className="prose prose-sm dark:prose-invert max-w-none text-sm min-h-[6rem] cursor-pointer [&_a]:text-violet-400 [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_h1]:font-bold [&_h2]:font-semibold [&_h3]:font-medium"
+          className="text-sm min-h-[4rem] cursor-pointer [&_a]:text-violet-400 [&_a]:underline [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_h1]:font-bold [&_h1]:text-base [&_h2]:font-semibold [&_h3]:font-medium [&_p]:mb-2 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
           onClick={() => setIsPreview(false)}
           title="Click to edit"
           dangerouslySetInnerHTML={{
@@ -95,11 +105,13 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
         />
       ) : (
         <textarea
+          ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={handleBlur}
           placeholder="Write notes in markdown…"
-          className="w-full min-h-[8rem] text-sm bg-transparent resize-y focus:outline-none placeholder:text-muted-foreground/50"
+          rows={1}
+          className="w-full text-sm bg-transparent resize-none overflow-hidden focus:outline-none placeholder:text-muted-foreground/50"
         />
       )}
     </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { Link2, ExternalLink } from "lucide-react";
+import { Link2, StickyNote } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { formatDuration } from "@/lib/formatDuration";
@@ -19,9 +19,10 @@ const BUMP_OPTIONS = [-5, -1, 1, 5];
 interface Props {
   onBump?: (key: string, label: string, deltaMin: number) => void;
   onSelectTask?: (taskId: Id<"tasks">) => void;
+  onNoteIconClick?: (taskId: Id<"tasks">) => void;
 }
 
-export function ActiveTimer({ onBump, onSelectTask }: Props) {
+export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
   const activeData = useQuery(api.sessions.getActiveSession);
   const tagColors = useQuery(api.tagColors.getTagColors);
   const stopSession = useMutation(api.sessions.stopActiveSession);
@@ -34,10 +35,8 @@ export function ActiveTimer({ onBump, onSelectTask }: Props) {
   const [editingStart, setEditingStart] = useState(false);
   const [editName, setEditName] = useState("");
   const [editTags, setEditTags] = useState("");
+  const [editUrl, setEditUrl] = useState("");
   const [tagCursorPos, setTagCursorPos] = useState(0);
-  const [editingUrl, setEditingUrl] = useState(false);
-  const [urlDraft, setUrlDraft] = useState("");
-  const urlInputRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const clickedTagRef = useRef<string | null>(null);
 
@@ -93,29 +92,11 @@ export function ActiveTimer({ onBump, onSelectTask }: Props) {
     if (!task) return;
     setEditName(task.name);
     setEditTags(task.tags.map((t) => `#${t}`).join(" "));
+    setEditUrl(task.url ?? "");
     setFocusTags(focus === "tags");
     clickedTagRef.current = clickedTag ?? null;
     setIsEditing(true);
     onSelectTask?.(task._id);
-  }
-
-  function openUrlEditor() {
-    if (!task) return;
-    setUrlDraft(task.url ?? "");
-    setEditingUrl(true);
-    requestAnimationFrame(() => urlInputRef.current?.focus());
-  }
-
-  async function saveUrl() {
-    if (!task) return;
-    const url = urlDraft.trim() || undefined;
-    await updateTaskUrl({ taskId: task._id, url });
-    setEditingUrl(false);
-  }
-
-  function handleUrlKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") saveUrl();
-    if (e.key === "Escape") setEditingUrl(false);
   }
 
   async function saveEdit() {
@@ -130,6 +111,10 @@ export function ActiveTimer({ onBump, onSelectTask }: Props) {
       setLastUndo(async () => {
         await updateTask({ taskId: task._id, name: prevName, tags: prevTags });
       });
+    }
+    const newUrl = editUrl.trim() || undefined;
+    if (newUrl !== (task.url ?? undefined)) {
+      await updateTaskUrl({ taskId: task._id, url: newUrl });
     }
     setIsEditing(false);
   }
@@ -214,6 +199,14 @@ export function ActiveTimer({ onBump, onSelectTask }: Props) {
                     />
                   )}
                 </div>
+                <input
+                  type="url"
+                  value={editUrl}
+                  onChange={(e) => setEditUrl(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="link: https://…"
+                  className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
+                />
               </div>
             ) : (
               <span
@@ -241,13 +234,36 @@ export function ActiveTimer({ onBump, onSelectTask }: Props) {
         <div className="text-right shrink-0 space-y-1">
           <div className="font-mono text-lg tabular-nums">{formatDuration(elapsedMs, elapsedMs < 120_000)}</div>
           <div className="flex items-center justify-end gap-1.5">
-            <button
-              onClick={openUrlEditor}
-              className={task?.url ? "text-violet-400 hover:text-violet-300 transition-colors" : "text-muted-foreground opacity-40 hover:opacity-70 transition-opacity"}
-              title={task?.url ? "Edit link" : "Add link"}
-            >
-              <Link2 size={13} />
-            </button>
+            {task && (
+              <>
+                {task.url ? (
+                  <a
+                    href={task.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-violet-400 hover:text-violet-300 transition-colors"
+                    title="Open link"
+                  >
+                    <Link2 size={13} />
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => startEditing()}
+                    className="text-muted-foreground opacity-40 hover:opacity-70 transition-opacity"
+                    title="Add link"
+                  >
+                    <Link2 size={13} />
+                  </button>
+                )}
+                <button
+                  onClick={() => onNoteIconClick?.(task._id)}
+                  className={task.notes ? "text-violet-400 hover:text-violet-300 transition-colors" : "text-muted-foreground opacity-40 hover:opacity-70 transition-opacity"}
+                  title={task.notes ? "View notes" : "Add notes"}
+                >
+                  <StickyNote size={13} />
+                </button>
+              </>
+            )}
             <button
               onClick={() => stopSession({})}
               className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors"
@@ -257,32 +273,6 @@ export function ActiveTimer({ onBump, onSelectTask }: Props) {
           </div>
         </div>
       </div>
-      {editingUrl && (
-        <div className="flex items-center gap-1.5 pt-1 border-t border-foreground/10">
-          <input
-            ref={urlInputRef}
-            type="url"
-            value={urlDraft}
-            onChange={(e) => setUrlDraft(e.target.value)}
-            onKeyDown={handleUrlKeyDown}
-            onBlur={saveUrl}
-            placeholder="https://…"
-            className="flex-1 text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
-          />
-          {urlDraft.trim() && (
-            <a
-              href={urlDraft.trim()}
-              target="_blank"
-              rel="noopener noreferrer"
-              onMouseDown={(e) => e.preventDefault()}
-              className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-              title="Open link"
-            >
-              <ExternalLink size={12} />
-            </a>
-          )}
-        </div>
-      )}
       <div className="flex items-center gap-1.5 pt-1 border-t border-foreground/10">
         <button
           onClick={() => setEditingStart(true)}
