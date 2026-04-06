@@ -17,7 +17,7 @@ interface Props {
   colorMap: Map<string, string>;
 }
 
-const TRUNCATE = 18;
+const TRUNCATE = 22;
 
 function truncate(s: string) {
   return s.length > TRUNCATE ? s.slice(0, TRUNCATE - 1) + "…" : s;
@@ -41,14 +41,17 @@ export function TaskBarChart({ data, colorMap }: Props) {
         <YAxis
           type="category"
           dataKey="name"
-          width={110}
+          width={130}
           tickFormatter={truncate}
           tick={{ fontSize: 12, fill: "#6b7280" }}
           axisLine={false}
           tickLine={false}
         />
         <Tooltip
-          formatter={(value: number) => [`${value} min`, "Duration"]}
+          formatter={(_value: number, _name: string, props: { payload?: { durationLabel?: string } }) => [
+            props.payload?.durationLabel ?? `${_value} min`,
+            "Duration",
+          ]}
           contentStyle={{ fontSize: 12 }}
         />
         <Bar dataKey="minutes" radius={[0, 4, 4, 0]} isAnimationActive={false}>
