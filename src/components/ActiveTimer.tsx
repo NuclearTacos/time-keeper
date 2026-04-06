@@ -32,6 +32,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [focusTags, setFocusTags] = useState(false);
+  const [focusUrl, setFocusUrl] = useState(false);
   const [editingStart, setEditingStart] = useState(false);
   const [editName, setEditName] = useState("");
   const [editTags, setEditTags] = useState("");
@@ -94,12 +95,13 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
   const { task } = activeData;
   const session = activeData.session;
 
-  function startEditing(focus: "name" | "tags" = "name", clickedTag?: string) {
+  function startEditing(focus: "name" | "tags" | "url" = "name", clickedTag?: string) {
     if (!task) return;
     setEditName(task.name);
     setEditTags(task.tags.map((t) => `#${t}`).join(" "));
     setEditUrl(task.url ?? "");
     setFocusTags(focus === "tags");
+    setFocusUrl(focus === "url");
     clickedTagRef.current = clickedTag ?? null;
     setIsEditing(true);
     onSelectTask?.(task._id);
@@ -178,7 +180,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
             {isEditing ? (
               <div className="flex-1 space-y-1" onBlur={handleContainerBlur}>
                 <input
-                  autoFocus={!focusTags}
+                  autoFocus={!focusTags && !focusUrl}
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -207,6 +209,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
                 </div>
                 <input
                   type="url"
+                  autoFocus={focusUrl}
                   value={editUrl}
                   onChange={(e) => setEditUrl(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -254,7 +257,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
                   </a>
                 ) : (
                   <button
-                    onClick={() => startEditing()}
+                    onClick={() => startEditing("url")}
                     className="text-muted-foreground opacity-40 hover:opacity-70 transition-opacity"
                     title="Add link"
                   >
