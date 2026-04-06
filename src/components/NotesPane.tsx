@@ -39,14 +39,15 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
     }
   }, [task?._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-expand textarea whenever draft changes.
+  // Auto-expand textarea whenever draft changes or edit mode is entered.
   // useLayoutEffect runs synchronously after DOM update so scrollHeight is accurate.
   useLayoutEffect(() => {
+    if (isPreview) return;
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
-  }, [draft]);
+  }, [draft, isPreview]);
 
   async function handleBlur() {
     if (!taskId) return;
