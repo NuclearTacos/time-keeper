@@ -48,7 +48,20 @@ export default function FeedbackPage() {
         </div>
 
         {entries === undefined ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <ul className="space-y-3 animate-pulse">
+            {[3, 2, 4].map((lines, i) => (
+              <li key={i} className="border rounded p-3 space-y-2">
+                <div className="h-2.5 w-32 bg-muted-foreground/10 rounded" />
+                {Array.from({ length: lines }).map((_, j) => (
+                  <div
+                    key={j}
+                    className="h-3 bg-muted-foreground/10 rounded"
+                    style={{ width: j === lines - 1 ? "60%" : "100%" }}
+                  />
+                ))}
+              </li>
+            ))}
+          </ul>
         ) : filtered!.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {entries.length === 0 ? "No feedback yet." : "No unresolved feedback."}
