@@ -53,7 +53,22 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
     useTagSuggestions({ mode: "hash", inputValue: editTags, cursorPosition: tagCursorPos });
 
   if (recentTasks === undefined) {
-    return <p className="text-sm text-muted-foreground">Loading...</p>;
+    return (
+      <ul className="divide-y animate-pulse">
+        {[...Array(3)].map((_, i) => (
+          <li key={i} className="flex items-center justify-between gap-4 py-2">
+            <div className="space-y-1.5 flex-1 min-w-0">
+              <div className="h-3 rounded bg-muted-foreground/20" style={{ width: `${50 + i * 20}%` }} />
+              <div className="h-2.5 rounded bg-muted-foreground/10 w-1/3" />
+              <div className="h-2 rounded bg-muted-foreground/10 w-16" />
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="h-6 w-14 rounded border bg-muted-foreground/10" />
+            </div>
+          </li>
+        ))}
+      </ul>
+    );
   }
 
   const activeTaskId = activeData?.task?._id;
