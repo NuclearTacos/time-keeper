@@ -12,19 +12,76 @@ interface NotesPaneProps {
   onClose: () => void;
 }
 
+/**
+ * Given a click position inside a rendered-markdown div, find the
+ * approximate cursor position in the raw markdown string.
+ *
+ * Strategy: walk text nodes before the caret to get the rendered-text
+ * offset, then advance through the markdown character-by-character,
+ * matching rendered characters as a subsequence (skipping markdown
+ * syntax characters that don't appear in the rendered output).
+ */
+function getMarkdownPosFromClick(
+  previewEl: HTMLElement,
+  clientX: number,
+  clientY: number,
+  markdown: string
+): number {
+  // Get the caret position in the rendered DOM (cross-browser)
+  let caretNode: Node | null = null;
+  let caretOffset = 0;
+
+  if (document.caretRangeFromPoint) {
+    const range = document.caretRangeFromPoint(clientX, clientY);
+    if (range) { caretNode = range.startContainer; caretOffset = range.startOffset; }
+  } else {
+    // Firefox
+    const pos = (document as any).caretPositionFromPoint?.(clientX, clientY);
+    if (pos) { caretNode = pos.offsetNode; caretOffset = pos.offset; }
+  }
+  if (!caretNode) return markdown.length;
+
+  // Sum up text characters before the caret in the preview element
+  let renderedBefore = 0;
+  const walker = document.createTreeWalker(previewEl, NodeFilter.SHOW_TEXT);
+  let node: Text | null;
+  let found = false;
+  while ((node = walker.nextNode() as Text | null)) {
+    if (node === caretNode) {
+      renderedBefore += caretOffset;
+      found = true;
+      break;
+    }
+    renderedBefore += node.textContent?.length ?? 0;
+  }
+  if (!found) return markdown.length;
+
+  // Map rendered-text offset → markdown offset via subsequence matching.
+  // Walk the markdown; whenever the current markdown char matches the
+  // next expected rendered char, consume a rendered char. Stop when we've
+  // consumed `renderedBefore` rendered chars.
+  const rendered = previewEl.textContent ?? "";
+  let mdPos = 0;
+  let matchPos = 0;
+  while (mdPos < markdown.length && matchPos < renderedBefore) {
+    if (markdown[mdPos] === rendered[matchPos]) matchPos++;
+    mdPos++;
+  }
+  return mdPos;
+}
+
 export function NotesPane({ taskId, onClose }: NotesPaneProps) {
-  const task = useQuery(
-    api.tasks.getTask,
-    taskId ? { taskId } : "skip"
-  );
+  const task = useQuery(api.tasks.getTask, taskId ? { taskId } : "skip");
   const updateTaskNotes = useMutation(api.tasks.updateTaskNotes);
 
   const [draft, setDraft] = useState("");
   const [isPreview, setIsPreview] = useState(false);
   const prevTaskIdRef = useRef<Id<"tasks"> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Reset preview mode and draft when switching tasks
+  // Reset preview mode when switching tasks
   useEffect(() => {
     if (taskId !== prevTaskIdRef.current) {
       prevTaskIdRef.current = taskId;
@@ -32,15 +89,14 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
     }
   }, [taskId]);
 
-  // Sync draft from server when task loads or changes identity
+  // Sync draft from server when task identity changes
   useEffect(() => {
     if (task !== undefined) {
       setDraft(task?.notes ?? "");
     }
   }, [task?._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-expand textarea whenever draft changes or edit mode is entered.
-  // useLayoutEffect runs synchronously after DOM update so scrollHeight is accurate.
+  // Auto-expand textarea; useLayoutEffect so scrollHeight is accurate
   useLayoutEffect(() => {
     if (isPreview) return;
     const el = textareaRef.current;
@@ -49,10 +105,37 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
     el.style.height = `${el.scrollHeight}px`;
   }, [draft, isPreview]);
 
-  async function handleBlur() {
+  async function save() {
     if (!taskId) return;
-    const notes = draft.trim() || undefined;
-    await updateTaskNotes({ taskId, notes });
+    await updateTaskNotes({ taskId, notes: draft.trim() || undefined });
+  }
+
+  // Blur the container → save and switch to preview
+  function handleContainerBlur(e: React.FocusEvent) {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    if (!isPreview) {
+      save();
+      setIsPreview(true);
+    }
+  }
+
+  // Click in preview → switch to edit, restoring cursor position
+  function handlePreviewClick(e: React.MouseEvent) {
+    // Don't intercept link clicks
+    if ((e.target as HTMLElement).closest("a")) return;
+
+    const el = previewRef.current;
+    if (!el) { setIsPreview(false); return; }
+
+    const mdPos = getMarkdownPosFromClick(el, e.clientX, e.clientY, draft);
+    setIsPreview(false);
+
+    requestAnimationFrame(() => {
+      const ta = textareaRef.current;
+      if (!ta) return;
+      ta.focus();
+      ta.setSelectionRange(mdPos, mdPos);
+    });
   }
 
   if (!taskId) {
@@ -76,7 +159,11 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
   }
 
   return (
-    <div className="border rounded-md p-4 space-y-2">
+    <div
+      ref={containerRef}
+      className="border rounded-md p-4 space-y-2"
+      onBlur={handleContainerBlur}
+    >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
           {task ? task.name : "notes"}
@@ -86,6 +173,7 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
             if (isPreview) {
               onClose();
             } else {
+              save();
               setIsPreview(true);
             }
           }}
@@ -98,11 +186,13 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
 
       {isPreview ? (
         <div
-          className="text-sm min-h-[4rem] cursor-pointer [&_a]:text-violet-400 [&_a]:underline [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_h1]:font-bold [&_h1]:text-base [&_h2]:font-semibold [&_h3]:font-medium [&_p]:mb-2 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
-          onClick={() => setIsPreview(false)}
-          title="Click to edit"
+          ref={previewRef}
+          className="text-sm min-h-[4rem] cursor-text [&_a]:text-violet-400 [&_a]:underline [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_h1]:font-bold [&_h1]:text-base [&_h2]:font-semibold [&_h3]:font-medium [&_p]:mb-2 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
+          onClick={handlePreviewClick}
           dangerouslySetInnerHTML={{
-            __html: draft.trim() ? (marked(draft) as string) : '<p class="text-muted-foreground italic">No notes yet.</p>',
+            __html: draft.trim()
+              ? (marked(draft) as string)
+              : '<p class="text-muted-foreground/50 italic text-sm">No notes yet. Click to edit.</p>',
           }}
         />
       ) : (
@@ -110,7 +200,12 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
           ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onBlur={handleBlur}
+          onBlur={(e) => {
+            // Only save on blur; container blur handles switching to preview
+            if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+              save();
+            }
+          }}
           placeholder="Write notes in markdown…"
           rows={1}
           className="w-full text-sm bg-transparent resize-none overflow-hidden focus:outline-none placeholder:text-muted-foreground/50"
