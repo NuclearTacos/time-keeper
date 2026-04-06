@@ -10,6 +10,8 @@ export default defineSchema({
     name: v.string(),
     tags: v.array(v.string()), // lowercase, no # prefix
     createdAt: v.number(),
+    url: v.optional(v.string()),
+    notes: v.optional(v.string()),
   }).index("by_user", ["userId"]),
 
   userSettings: defineTable({

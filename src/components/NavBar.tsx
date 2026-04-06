@@ -3,9 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { StickyNote } from "lucide-react";
 import { FeedbackButton } from "./FeedbackButton";
 
-export function NavBar() {
+interface NavBarProps {
+  notesOpen?: boolean;
+  onToggleNotes?: () => void;
+}
+
+export function NavBar({ notesOpen, onToggleNotes }: NavBarProps) {
   const pathname = usePathname();
   const { signOut } = useAuthActions();
 
@@ -39,6 +45,15 @@ export function NavBar() {
           </Link>
         </div>
         <div className="flex items-center gap-3">
+          {onToggleNotes && (
+            <button
+              onClick={onToggleNotes}
+              className={notesOpen ? "text-foreground transition-colors" : "text-muted-foreground hover:text-foreground transition-colors"}
+              title="Toggle notes"
+            >
+              <StickyNote size={16} />
+            </button>
+          )}
           <FeedbackButton />
           <button
             onClick={() => signOut()}

@@ -172,6 +172,28 @@ export const getAllUserTags = query({
   },
 });
 
+export const updateTaskUrl = mutation({
+  args: { taskId: v.id("tasks"), url: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const task = await ctx.db.get(args.taskId);
+    if (!task || task.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(args.taskId, { url: args.url });
+  },
+});
+
+export const updateTaskNotes = mutation({
+  args: { taskId: v.id("tasks"), notes: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const task = await ctx.db.get(args.taskId);
+    if (!task || task.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(args.taskId, { notes: args.notes });
+  },
+});
+
 export const getTask = query({
   args: { taskId: v.id("tasks") },
   handler: async (ctx, args) => {
