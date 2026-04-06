@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { Trash2, AlertTriangle, Link2, ExternalLink } from "lucide-react";
+import { Trash2, AlertTriangle, Link2, StickyNote } from "lucide-react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
@@ -14,9 +14,10 @@ import { getTagTextClass } from "@/lib/tagColors";
 
 interface RecentTasksListProps {
   onSelectTask?: (taskId: Id<"tasks">) => void;
+  onNoteIconClick?: (taskId: Id<"tasks">) => void;
 }
 
-export function RecentTasksList({ onSelectTask }: RecentTasksListProps) {
+export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksListProps) {
   const startOfToday = getStartOfToday();
   const recentTasks = useQuery(api.sessions.getRecentTasks, { limit: 10, startOfToday });
   const tagColors = useQuery(api.tagColors.getTagColors);
@@ -29,11 +30,9 @@ export function RecentTasksList({ onSelectTask }: RecentTasksListProps) {
   const [confirmDelete, setConfirmDelete] = useState<{ taskId: Id<"tasks">; taskName: string } | null>(null);
   const [editName, setEditName] = useState("");
   const [editTags, setEditTags] = useState("");
+  const [editUrl, setEditUrl] = useState("");
   const [focusTags, setFocusTags] = useState(false);
   const [tagCursorPos, setTagCursorPos] = useState(0);
-  const [editingUrlId, setEditingUrlId] = useState<Id<"tasks"> | null>(null);
-  const [urlDraft, setUrlDraft] = useState("");
-  const urlInputRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const clickedTagRef = useRef<string | null>(null);
 
@@ -65,35 +64,19 @@ export function RecentTasksList({ onSelectTask }: RecentTasksListProps) {
     return <p className="text-sm text-muted-foreground">No tasks today.</p>;
   }
 
-  function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[] }, focus: "name" | "tags" = "name", clickedTag?: string) {
+  function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[]; url?: string }, focus: "name" | "tags" = "name", clickedTag?: string) {
     setEditName(task.name);
     setEditTags(task.tags.map((t) => `#${t}`).join(" "));
+    setEditUrl(task.url ?? "");
     setFocusTags(focus === "tags");
     clickedTagRef.current = clickedTag ?? null;
     setEditingId(task._id);
     onSelectTask?.(task._id);
   }
 
-  function openUrlEditor(task: { _id: Id<"tasks">; url?: string }) {
-    setUrlDraft(task.url ?? "");
-    setEditingUrlId(task._id);
-    requestAnimationFrame(() => urlInputRef.current?.focus());
-  }
-
-  async function saveUrl(taskId: Id<"tasks">) {
-    const url = urlDraft.trim() || undefined;
-    await updateTaskUrl({ taskId, url });
-    setEditingUrlId(null);
-  }
-
-  function handleUrlKeyDown(e: React.KeyboardEvent, taskId: Id<"tasks">) {
-    if (e.key === "Enter") saveUrl(taskId);
-    if (e.key === "Escape") setEditingUrlId(null);
-  }
-
   async function saveEdit(taskId: Id<"tasks">) {
+    const task = recentTasks?.find((r) => r.task?._id === taskId)?.task;
     if (editName.trim()) {
-      const task = recentTasks?.find((r) => r.task?._id === taskId)?.task;
       const prevName = task?.name ?? "";
       const prevTags = task?.tags ?? [];
       const tags = editTags.trim()
@@ -103,6 +86,10 @@ export function RecentTasksList({ onSelectTask }: RecentTasksListProps) {
       setLastUndo(async () => {
         await updateTask({ taskId, name: prevName, tags: prevTags });
       });
+    }
+    const newUrl = editUrl.trim() || undefined;
+    if (newUrl !== (task?.url ?? undefined)) {
+      await updateTaskUrl({ taskId, url: newUrl });
     }
     setEditingId(null);
   }
@@ -193,6 +180,14 @@ export function RecentTasksList({ onSelectTask }: RecentTasksListProps) {
                         />
                       )}
                     </div>
+                    <input
+                      type="url"
+                      value={editUrl}
+                      onChange={(e) => setEditUrl(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, task._id)}
+                      placeholder="link: https://…"
+                      className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
+                    />
                   </div>
                 ) : (
                   <>
@@ -221,12 +216,31 @@ export function RecentTasksList({ onSelectTask }: RecentTasksListProps) {
               <p className="text-xs text-muted-foreground mt-0.5">{ago}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {task.url ? (
+                <a
+                  href={task.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-violet-400 hover:text-violet-300 transition-colors"
+                  title="Open link"
+                >
+                  <Link2 size={13} />
+                </a>
+              ) : (
+                <button
+                  onClick={() => startEditing(task)}
+                  className="opacity-0 group-hover:opacity-40 hover:!opacity-70 text-muted-foreground transition-all"
+                  title="Add link"
+                >
+                  <Link2 size={13} />
+                </button>
+              )}
               <button
-                onClick={() => openUrlEditor(task)}
-                className={task.url ? "text-violet-400 hover:text-violet-300 transition-colors" : "opacity-0 group-hover:opacity-40 hover:!opacity-70 text-muted-foreground transition-all"}
-                title={task.url ? "Edit link" : "Add link"}
+                onClick={() => onNoteIconClick?.(task._id)}
+                className={task.notes ? "text-violet-400 hover:text-violet-300 transition-colors" : "opacity-0 group-hover:opacity-40 hover:!opacity-70 text-muted-foreground transition-all"}
+                title={task.notes ? "View notes" : "Add notes"}
               >
-                <Link2 size={13} />
+                <StickyNote size={13} />
               </button>
               <button
                 onClick={() => setConfirmDelete({ taskId: task._id, taskName: task.name })}
@@ -243,32 +257,6 @@ export function RecentTasksList({ onSelectTask }: RecentTasksListProps) {
               </button>
             </div>
           </li>
-          {editingUrlId === task._id && (
-            <li className="py-1.5 flex items-center gap-1.5">
-              <input
-                ref={urlInputRef}
-                type="url"
-                value={urlDraft}
-                onChange={(e) => setUrlDraft(e.target.value)}
-                onKeyDown={(e) => handleUrlKeyDown(e, task._id)}
-                onBlur={() => saveUrl(task._id)}
-                placeholder="https://…"
-                className="flex-1 text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
-              />
-              {urlDraft.trim() && (
-                <a
-                  href={urlDraft.trim()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onMouseDown={(e) => e.preventDefault()}
-                  className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                  title="Open link"
-                >
-                  <ExternalLink size={12} />
-                </a>
-              )}
-            </li>
-          )}
           </Fragment>
         );
       })}
