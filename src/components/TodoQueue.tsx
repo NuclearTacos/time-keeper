@@ -87,8 +87,18 @@ export function TodoQueue({ onSelectTask }: TodoQueueProps) {
 
   function formatDate(dateStr: string) {
     const [year, month, day] = dateStr.split("-").map(Number);
-    const d = new Date(year, month - 1, day);
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const date = new Date(year, month - 1, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.round((date.getTime() - today.getTime()) / 86_400_000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Tomorrow";
+    if (diff === -1) return "Yesterday";
+    const dayName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][date.getDay()];
+    if (diff >= 2 && diff <= 6) return dayName;
+    if (diff >= 7 && diff <= 13) return `Next ${dayName}`;
+    if (diff <= -2 && diff >= -6) return `Last ${dayName}`;
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   }
 
   return (
