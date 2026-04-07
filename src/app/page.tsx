@@ -7,6 +7,7 @@ import { NavBar } from "@/components/NavBar";
 import { ActiveTagsBar } from "@/components/ActiveTagsBar";
 import { BumpToast } from "@/components/BumpToast";
 import { NotesPane } from "@/components/NotesPane";
+import { TodoQueue } from "@/components/TodoQueue";
 import { useActiveTags } from "@/lib/useActiveTags";
 import { useBumpAccumulator } from "@/lib/useBumpAccumulator";
 import { useEffect, useState } from "react";
@@ -86,6 +87,7 @@ export default function Home() {
               />
             </div>
           )}
+          <TodoQueue onSelectTask={handleSelectTask} />
           <section>
             <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               Recent

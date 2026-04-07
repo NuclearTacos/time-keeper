@@ -16,11 +16,17 @@ export function NewTaskInput({ activeTags = [] }: Props) {
   const [value, setValue] = useState("");
   const [cursorPos, setCursorPos] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const startSession = useMutation(api.sessions.startSession);
+  const createQueuedTask = useMutation(api.tasks.createQueuedTask);
 
   const { isOpen, suggestions, highlightedIndex, handleKeyDown: hookKeyDown, selectTag } =
     useTagSuggestions({ mode: "hash", inputValue: value, cursorPosition: cursorPos });
+
+  const { tags: parsedTags } = parseTags(value.trim());
+  const mergedTags = [...new Set([...activeTags, ...parsedTags])];
+  const isTodoMode = mergedTags.includes("todo");
 
   function insertTag(tag: string) {
     const token = getHashTokenAtCursor(value, cursorPos);
@@ -43,11 +49,20 @@ export function NewTaskInput({ activeTags = [] }: Props) {
     if (!trimmed) return;
     const { name, tags } = parseTags(trimmed);
     if (!name) return;
-    const mergedTags = [...new Set([...activeTags, ...tags])];
+    const merged = [...new Set([...activeTags, ...tags])];
     setLoading(true);
     try {
-      await startSession({ name, tags: mergedTags });
+      if (isTodoMode) {
+        await createQueuedTask({
+          name,
+          tags: merged,
+          scheduledDate: scheduledDate || undefined,
+        });
+      } else {
+        await startSession({ name, tags: merged });
+      }
       setValue("");
+      setScheduledDate("");
     } finally {
       setLoading(false);
     }
@@ -65,36 +80,49 @@ export function NewTaskInput({ activeTags = [] }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
-      <div className="relative flex-1">
-        <input
-          ref={inputRef}
-          type="text"
-          value={value}
-          onChange={(e) => { setValue(e.target.value); trackCursor(e); }}
-          onKeyDown={handleInputKeyDown}
-          onClick={trackCursor}
-          onKeyUp={trackCursor}
-          placeholder="New task... use #tag for tags"
-          disabled={loading}
-          autoCapitalize="none"
-          className="w-full border rounded-md px-3 py-2 text-sm bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
-        />
-        {isOpen && (
-          <TagSuggestionDropdown
-            suggestions={suggestions}
-            highlightedIndex={highlightedIndex}
-            onSelect={(tag) => { selectTag(tag); insertTag(tag); }}
+    <form onSubmit={handleSubmit} className="space-y-1.5">
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={(e) => { setValue(e.target.value); trackCursor(e); }}
+            onKeyDown={handleInputKeyDown}
+            onClick={trackCursor}
+            onKeyUp={trackCursor}
+            placeholder="New task... use #tag for tags"
+            disabled={loading}
+            autoCapitalize="none"
+            className="w-full border rounded-md px-3 py-2 text-sm bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
           />
-        )}
+          {isOpen && (
+            <TagSuggestionDropdown
+              suggestions={suggestions}
+              highlightedIndex={highlightedIndex}
+              onSelect={(tag) => { selectTag(tag); insertTag(tag); }}
+            />
+          )}
+        </div>
+        <button
+          type="submit"
+          disabled={loading || !value.trim()}
+          className="border rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors disabled:opacity-50"
+        >
+          {isTodoMode ? "ToDo" : "start"}
+        </button>
       </div>
-      <button
-        type="submit"
-        disabled={loading || !value.trim()}
-        className="border rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors disabled:opacity-50"
-      >
-        start
-      </button>
+      {isTodoMode && (
+        <div className="flex items-center gap-2 pl-0.5">
+          <label className="text-xs text-muted-foreground">due date</label>
+          <input
+            type="date"
+            value={scheduledDate}
+            onChange={(e) => setScheduledDate(e.target.value)}
+            className="text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground"
+          />
+        </div>
+      )}
     </form>
   );
 }

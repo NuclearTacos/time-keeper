@@ -186,6 +186,86 @@ export const updateTaskUrl = mutation({
   },
 });
 
+export const queueTask = mutation({
+  args: { taskId: v.id("tasks") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const task = await ctx.db.get(args.taskId);
+    if (!task || task.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(args.taskId, {
+      tags: task.tags.filter((t) => t !== "todo"),
+      queuedAt: Date.now(),
+    });
+  },
+});
+
+export const dequeueTask = mutation({
+  args: { taskId: v.id("tasks") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const task = await ctx.db.get(args.taskId);
+    if (!task || task.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(args.taskId, { queuedAt: undefined, scheduledDate: undefined });
+  },
+});
+
+export const createQueuedTask = mutation({
+  args: {
+    name: v.string(),
+    tags: v.array(v.string()),
+    scheduledDate: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    return await ctx.db.insert("tasks", {
+      userId,
+      name: args.name,
+      tags: args.tags.filter((t) => t !== "todo"),
+      createdAt: Date.now(),
+      queuedAt: Date.now(),
+      scheduledDate: args.scheduledDate,
+    });
+  },
+});
+
+export const getQueuedTasks = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    return tasks
+      .filter((t) => t.queuedAt != null)
+      .sort((a, b) => (a.queuedAt ?? 0) - (b.queuedAt ?? 0));
+  },
+});
+
+export const updateQueuedTask = mutation({
+  args: {
+    taskId: v.id("tasks"),
+    name: v.string(),
+    tags: v.array(v.string()),
+    scheduledDate: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const task = await ctx.db.get(args.taskId);
+    if (!task || task.userId !== userId) throw new Error("Not found");
+    await ctx.db.patch(args.taskId, {
+      name: args.name,
+      tags: args.tags,
+      scheduledDate: args.scheduledDate,
+    });
+  },
+});
+
 export const updateTaskNotes = mutation({
   args: { taskId: v.id("tasks"), notes: v.optional(v.string()) },
   handler: async (ctx, args) => {

@@ -12,7 +12,11 @@ export default defineSchema({
     createdAt: v.number(),
     url: v.optional(v.string()),
     notes: v.optional(v.string()),
-  }).index("by_user", ["userId"]),
+    queuedAt: v.optional(v.number()),      // epoch ms when task was added to ToDo queue
+    scheduledDate: v.optional(v.string()), // YYYY-MM-DD, only meaningful while queued
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_queued", ["userId", "queuedAt"]),
 
   userSettings: defineTable({
     userId: v.id("users"),
