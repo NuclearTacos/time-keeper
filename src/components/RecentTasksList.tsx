@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { Trash2, AlertTriangle, Link2, StickyNote } from "lucide-react";
+import { Trash2, AlertTriangle, Link2, StickyNote, ListTodo } from "lucide-react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 import { formatDuration } from "@/lib/formatDuration";
@@ -26,6 +26,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
   const updateTask = useMutation(api.tasks.updateTask);
   const deleteTask = useMutation(api.tasks.deleteTask);
   const updateTaskUrl = useMutation(api.tasks.updateTaskUrl);
+  const queueTask = useMutation(api.tasks.queueTask);
   const [editingId, setEditingId] = useState<Id<"tasks"> | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ taskId: Id<"tasks">; taskName: string } | null>(null);
   const [editName, setEditName] = useState("");
@@ -73,7 +74,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
 
   const activeTaskId = activeData?.task?._id;
 
-  const visibleTasks = recentTasks.filter(({ task }) => task && task._id !== activeTaskId);
+  const visibleTasks = recentTasks.filter(({ task }) => task && task._id !== activeTaskId && !task.queuedAt);
 
   if (visibleTasks.length === 0) {
     return <p className="text-sm text-muted-foreground">No tasks today.</p>;
@@ -264,12 +265,23 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
               >
                 <Trash2 size={13} />
               </button>
-              <button
-                onClick={() => startSession({ taskId: task._id })}
-                className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors"
-              >
-                resume
-              </button>
+              {task.tags.includes("todo") ? (
+                <button
+                  onClick={() => queueTask({ taskId: task._id })}
+                  className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors flex items-center gap-1"
+                  title="Add to ToDo queue"
+                >
+                  <ListTodo size={11} />
+                  ToDo
+                </button>
+              ) : (
+                <button
+                  onClick={() => startSession({ taskId: task._id })}
+                  className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors"
+                >
+                  resume
+                </button>
+              )}
             </div>
           </li>
           </Fragment>
