@@ -14,12 +14,18 @@ Do not add `Co-Authored-By` or any self-attribution to commit messages.
 
 # Feedback
 
-To read user feedback, use WebFetch:
-  GET https://time-keeper-pink.vercel.app/api/feedback
-  (fallback: GET https://cheerful-canary-927.convex.site/api/feedback)
+**Important:** The standard `WebFetch` tool and `curl` cannot reach the Convex site
+(`cheerful-canary-927.convex.site`) or the Vercel app — both are blocked by the
+egress proxy / return 403. `npx convex run` also fails for the same reason.
+
+Use the **Vercel MCP tool** `web_fetch_vercel_url` instead (search for it with
+ToolSearch if not already loaded). This tool can authenticate through Vercel's
+protection layer.
+
+To read user feedback:
+  web_fetch_vercel_url({ url: "https://time-keeper-pink.vercel.app/api/feedback" })
 Returns JSON array of { _id, text, createdAt, resolved } objects, newest first.
 
-To mark feedback as resolved after addressing it, use WebFetch:
-  GET https://time-keeper-pink.vercel.app/api/feedback?action=resolve&id=<_id from the feedback entry>
-  (fallback: GET https://cheerful-canary-927.convex.site/api/feedback/resolve?id=<_id from the feedback entry>)
+To mark feedback as resolved after addressing it:
+  web_fetch_vercel_url({ url: "https://time-keeper-pink.vercel.app/api/feedback?action=resolve&id=<_id>" })
 Always resolve feedback after you have written the code that addresses it.
