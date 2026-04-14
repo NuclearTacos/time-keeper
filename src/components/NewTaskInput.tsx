@@ -69,6 +69,12 @@ export function NewTaskInput({ activeTags = [] }: Props) {
   }
 
   function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // Ctrl+Enter or Cmd+Enter always submits, bypassing tag suggestions
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      inputRef.current?.closest("form")?.requestSubmit();
+      return;
+    }
     const result = hookKeyDown(e);
     if (result.selectedTag) {
       insertTag(result.selectedTag);
