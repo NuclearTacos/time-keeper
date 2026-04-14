@@ -8,6 +8,7 @@ import { api } from "../../convex/_generated/api";
 export function FeedbackButton() {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
   const submit = useMutation(api.feedback.submitFeedback);
 
   function close() {
@@ -16,9 +17,14 @@ export function FeedbackButton() {
   }
 
   async function handleSubmit() {
-    if (!text.trim()) return;
-    await submit({ text: text.trim() });
-    close();
+    if (!text.trim() || loading) return;
+    setLoading(true);
+    try {
+      await submit({ text: text.trim() });
+      close();
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -42,6 +48,7 @@ export function FeedbackButton() {
               autoFocus
               value={text}
               onChange={(e) => setText(e.target.value)}
+              disabled={loading}
               onKeyDown={(e) => {
                 if (e.key === "Escape") close();
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
@@ -66,10 +73,10 @@ export function FeedbackButton() {
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={!text.trim()}
+                  disabled={loading || !text.trim()}
                   className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors disabled:opacity-40"
                 >
-                  submit
+                  {loading ? "submitting…" : "submit"}
                 </button>
               </div>
             </div>
