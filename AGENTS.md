@@ -15,9 +15,11 @@ Do not add `Co-Authored-By` or any self-attribution to commit messages.
 # Feedback
 
 To read user feedback, use WebFetch:
-  GET https://cheerful-canary-927.convex.site/api/feedback
+  GET https://time-keeper-pink.vercel.app/api/feedback
+  (fallback: GET https://cheerful-canary-927.convex.site/api/feedback)
 Returns JSON array of { _id, text, createdAt, resolved } objects, newest first.
 
 To mark feedback as resolved after addressing it, use WebFetch:
-  GET https://cheerful-canary-927.convex.site/api/feedback/resolve?id=<_id from the feedback entry>
+  GET https://time-keeper-pink.vercel.app/api/feedback?action=resolve&id=<_id from the feedback entry>
+  (fallback: GET https://cheerful-canary-927.convex.site/api/feedback/resolve?id=<_id from the feedback entry>)
 Always resolve feedback after you have written the code that addresses it.
