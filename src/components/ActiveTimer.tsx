@@ -208,6 +208,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
                   )}
                 </div>
                 <input
+                  autoFocus={focusUrl}
                   type="url"
                   autoFocus={focusUrl}
                   value={editUrl}

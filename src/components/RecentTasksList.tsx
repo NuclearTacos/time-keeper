@@ -199,6 +199,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
                       )}
                     </div>
                     <input
+                      autoFocus={focusUrl}
                       type="url"
                       autoFocus={focusUrl}
                       value={editUrl}
