@@ -37,6 +37,6 @@ echo ""
 echo "$unresolved" | jq -r '.[] | "- [" + ._id + "] " + .text + " (submitted: " + (.createdAt / 1000 | strftime("%Y-%m-%d %H:%M UTC")) + ")"'
 echo ""
 echo "Review this feedback and address any items relevant to your current task."
-echo "After addressing feedback, resolve it with WebFetch POST to https://cheerful-canary-927.convex.site/api/feedback/resolve with body {\"feedbackId\": \"<_id>\"}"
+echo "After addressing feedback, resolve it with WebFetch GET to https://cheerful-canary-927.convex.site/api/feedback/resolve?id=<_id>"
 
 exit 0
