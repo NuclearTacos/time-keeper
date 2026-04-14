@@ -22,7 +22,7 @@
       "Bash(node --stack-size=65536 node_modules/.bin/next build)",
       "Bash(xargs grep:*)",
       "Bash(npm run:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
       "Bash(find:*)",
       "Bash(git add:*)",
