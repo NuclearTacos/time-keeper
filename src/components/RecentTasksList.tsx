@@ -33,6 +33,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
   const [editTags, setEditTags] = useState("");
   const [editUrl, setEditUrl] = useState("");
   const [focusTags, setFocusTags] = useState(false);
+  const [focusUrl, setFocusUrl] = useState(false);
   const [tagCursorPos, setTagCursorPos] = useState(0);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const clickedTagRef = useRef<string | null>(null);
@@ -80,11 +81,12 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
     return <p className="text-sm text-muted-foreground">No tasks today.</p>;
   }
 
-  function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[]; url?: string }, focus: "name" | "tags" = "name", clickedTag?: string) {
+  function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[]; url?: string }, focus: "name" | "tags" | "url" = "name", clickedTag?: string) {
     setEditName(task.name);
     setEditTags(task.tags.map((t) => `#${t}`).join(" "));
     setEditUrl(task.url ?? "");
     setFocusTags(focus === "tags");
+    setFocusUrl(focus === "url");
     clickedTagRef.current = clickedTag ?? null;
     setEditingId(task._id);
     onSelectTask?.(task._id);
@@ -169,7 +171,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
                     onBlur={(e) => handleContainerBlur(e, task._id)}
                   >
                     <input
-                      autoFocus={!focusTags}
+                      autoFocus={!focusTags && !focusUrl}
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, task._id)}
@@ -198,6 +200,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
                     </div>
                     <input
                       type="url"
+                      autoFocus={focusUrl}
                       value={editUrl}
                       onChange={(e) => setEditUrl(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, task._id)}
@@ -244,7 +247,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
                 </a>
               ) : (
                 <button
-                  onClick={() => startEditing(task)}
+                  onClick={() => startEditing(task, "url")}
                   className="opacity-0 group-hover:opacity-40 hover:!opacity-70 text-muted-foreground transition-all"
                   title="Add link"
                 >
