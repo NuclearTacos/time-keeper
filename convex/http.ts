@@ -30,4 +30,25 @@ http.route({
   }),
 });
 
+http.route({
+  path: "/api/feedback/resolve",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const feedbackId = url.searchParams.get("id");
+    if (!feedbackId) {
+      return new Response(JSON.stringify({ error: "Missing 'id' query parameter" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    await ctx.runMutation(api.feedback.resolveFeedback, {
+      feedbackId: feedbackId as any,
+    });
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
 export default http;

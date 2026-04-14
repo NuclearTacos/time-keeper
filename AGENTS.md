@@ -18,6 +18,6 @@ To read user feedback, use WebFetch:
   GET https://cheerful-canary-927.convex.site/api/feedback
 Returns JSON array of { _id, text, createdAt, resolved } objects, newest first.
 
-To mark feedback as resolved after addressing it:
-  POST https://cheerful-canary-927.convex.site/api/feedback/resolve
-  Body: { "feedbackId": "<_id from the feedback entry>" }
+To mark feedback as resolved after addressing it, use WebFetch:
+  GET https://cheerful-canary-927.convex.site/api/feedback/resolve?id=<_id from the feedback entry>
+Always resolve feedback after you have written the code that addresses it.
