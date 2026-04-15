@@ -7,7 +7,7 @@ export const submitFeedback = mutation({
   handler: async (ctx, { text }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
-    await ctx.db.insert("feedback", { userId, text, createdAt: Date.now() });
+    return await ctx.db.insert("feedback", { userId, text, createdAt: Date.now() });
   },
 });
 
