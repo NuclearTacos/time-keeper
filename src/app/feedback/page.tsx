@@ -15,6 +15,20 @@ export default function FeedbackPage() {
   const clearAll = useMutation(api.feedback.clearAllFeedback);
   const resolve = useMutation(api.feedback.resolveFeedback);
   const [showResolved, setShowResolved] = useState(false);
+  const [fixingId, setFixingId] = useState<string | null>(null);
+
+  async function handleFix(id: string, text: string) {
+    setFixingId(id);
+    try {
+      await fetch("/api/fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedbackText: text }),
+      });
+    } finally {
+      setFixingId(null);
+    }
+  }
 
   const filtered = entries?.filter((e) => showResolved || !e.resolved);
   const resolvedCount = entries?.filter((e) => e.resolved).length ?? 0;
@@ -83,12 +97,21 @@ export default function FeedbackPage() {
                     )}
                   </div>
                   {!entry.resolved && (
-                    <button
-                      onClick={() => resolve({ feedbackId: entry._id as Id<"feedback"> })}
-                      className="text-xs text-muted-foreground hover:text-green-600 transition-colors"
-                    >
-                      resolve
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleFix(entry._id, entry.text)}
+                        disabled={fixingId === entry._id}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+                      >
+                        {fixingId === entry._id ? "fixing…" : "fix"}
+                      </button>
+                      <button
+                        onClick={() => resolve({ feedbackId: entry._id as Id<"feedback"> })}
+                        className="text-xs text-muted-foreground hover:text-green-600 transition-colors"
+                      >
+                        resolve
+                      </button>
+                    </div>
                   )}
                 </div>
                 <p className="text-sm whitespace-pre-wrap">{entry.text}</p>

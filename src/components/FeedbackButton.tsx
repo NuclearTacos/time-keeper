@@ -9,6 +9,7 @@ export function FeedbackButton() {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingFix, setLoadingFix] = useState(false);
   const submit = useMutation(api.feedback.submitFeedback);
 
   function close() {
@@ -17,13 +18,29 @@ export function FeedbackButton() {
   }
 
   async function handleSubmit() {
-    if (!text.trim() || loading) return;
+    if (!text.trim() || loading || loadingFix) return;
     setLoading(true);
     try {
       await submit({ text: text.trim() });
       close();
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSubmitAndFix() {
+    if (!text.trim() || loading || loadingFix) return;
+    setLoadingFix(true);
+    try {
+      await submit({ text: text.trim() });
+      await fetch("/api/fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedbackText: text.trim() }),
+      });
+      close();
+    } finally {
+      setLoadingFix(false);
     }
   }
 
@@ -48,7 +65,7 @@ export function FeedbackButton() {
               autoFocus
               value={text}
               onChange={(e) => setText(e.target.value)}
-              disabled={loading}
+              disabled={loading || loadingFix}
               onKeyDown={(e) => {
                 if (e.key === "Escape") close();
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
@@ -73,10 +90,17 @@ export function FeedbackButton() {
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={loading || !text.trim()}
+                  disabled={loading || loadingFix || !text.trim()}
                   className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors disabled:opacity-40"
                 >
                   {loading ? "submitting…" : "submit"}
+                </button>
+                <button
+                  onClick={handleSubmitAndFix}
+                  disabled={loading || loadingFix || !text.trim()}
+                  className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors disabled:opacity-40"
+                >
+                  {loadingFix ? "fixing…" : "submit & fix"}
                 </button>
               </div>
             </div>
