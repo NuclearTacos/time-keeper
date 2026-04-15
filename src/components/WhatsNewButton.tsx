@@ -6,30 +6,40 @@ import { Bell } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { CHANGELOG } from "../lib/changelog";
 
-/** An entry dated YYYY-MM-DD is considered "unseen" if the start of the
- *  following day (UTC) is strictly after lastSeenAt.  Using end-of-day rather
- *  than start-of-day means entries added on the same calendar day as a prior
- *  feed visit still show up as new. */
-function countUnseen(lastSeenAt: number | null): number {
-  if (lastSeenAt === null) return CHANGELOG.length;
+type LastSeen = { lastSeenAt: number; lastSeenCount: number | null } | null;
+
+/**
+ * Count how many CHANGELOG entries are "new" for this user.
+ *
+ * If lastSeenCount is set we compare by entry count: any entry added after
+ * the user's last visit is at a lower index in the newest-first array.
+ *
+ * Legacy fallback (lastSeenCount === null): use the day-end timestamp logic
+ * so users who visited before this field existed aren't shown a stale badge.
+ */
+function countUnseen(lastSeen: LastSeen): number {
+  if (lastSeen === null) return CHANGELOG.length;
+  if (lastSeen.lastSeenCount !== null) {
+    return Math.max(0, CHANGELOG.length - lastSeen.lastSeenCount);
+  }
+  // Legacy: timestamp-based fallback
   return CHANGELOG.filter((entry) => {
     const entryDayEnd = new Date(entry.date + "T00:00:00Z").getTime() + 86400000;
-    return entryDayEnd > lastSeenAt;
+    return entryDayEnd > lastSeen.lastSeenAt;
   }).length;
 }
 
 export function WhatsNewButton() {
   const [open, setOpen] = useState(false);
-  const lastSeenAt = useQuery(api.whatsNew.getLastSeenAt);
+  const lastSeen = useQuery(api.whatsNew.getLastSeenAt);
   const markSeen = useMutation(api.whatsNew.markSeen);
 
-  const unseenCount =
-    lastSeenAt === undefined ? 0 : countUnseen(lastSeenAt);
+  // lastSeen is `undefined` while loading, `null` if never seen, or the record.
+  const unseenCount = lastSeen === undefined ? 0 : countUnseen(lastSeen);
 
   function handleOpen() {
     setOpen(true);
-    // Record that the user has now seen all entries.
-    markSeen();
+    markSeen({ count: CHANGELOG.length });
   }
 
   function handleClose() {
@@ -69,13 +79,20 @@ export function WhatsNewButton() {
               </button>
             </div>
             <ul className="divide-y max-h-96 overflow-y-auto">
-              {CHANGELOG.map((entry) => {
-                const entryTime = new Date(
-                  entry.date + "T00:00:00Z"
-                ).getTime();
-                const isNew =
-                  lastSeenAt === null ||
-                  entryTime + 86400000 > (lastSeenAt ?? 0);
+              {CHANGELOG.map((entry, i) => {
+                // Entry is "new" if it was added after the user's last visit.
+                // With count-based tracking: entries at indices 0..(unseenCount-1) are new.
+                // Legacy fallback: use day-end timestamp comparison.
+                let isNew: boolean;
+                if (lastSeen === null || lastSeen === undefined) {
+                  isNew = true;
+                } else if (lastSeen.lastSeenCount !== null) {
+                  isNew = i < CHANGELOG.length - lastSeen.lastSeenCount;
+                } else {
+                  const entryDayEnd =
+                    new Date(entry.date + "T00:00:00Z").getTime() + 86400000;
+                  isNew = entryDayEnd > lastSeen.lastSeenAt;
+                }
                 return (
                   <li key={entry.id} className="px-4 py-3 space-y-0.5">
                     <div className="flex items-center gap-2">

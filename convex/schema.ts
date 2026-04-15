@@ -84,6 +84,7 @@ export default defineSchema({
   // Tracks when each user last viewed the What's New feed.
   whatsNewSeen: defineTable({
     userId: v.id("users"),
-    lastSeenAt: v.number(), // epoch ms when user last opened the feed
+    lastSeenAt: v.number(), // epoch ms when user last opened the feed (kept for backward compat)
+    lastSeenCount: v.optional(v.number()), // number of CHANGELOG entries visible when user last opened the feed
   }).index("by_user", ["userId"]),
 });

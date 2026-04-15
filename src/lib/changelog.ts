@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "whats-new-same-day-entries-fix",
+    date: "2026-04-15",
+    title: "What's New now reliably detects all new entries",
+    description:
+      "Fixed a bug where changelog entries added on the same day as your last visit were not marked as new. The feed now tracks exactly which entries you have seen, so any addition — even multiple updates on the same day — correctly shows a badge and 'new' label.",
+  },
+  {
     id: "whats-new-badge-clears-on-close",
     date: "2026-04-15",
     title: "What's New badge now clears after viewing",
