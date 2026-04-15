@@ -117,6 +117,9 @@ export const startSession = mutation({
     } else {
       const task = await ctx.db.get(taskId);
       if (!task || task.userId !== userId) throw new Error("Task not found");
+      if (task.queuedAt) {
+        await ctx.db.patch(taskId, { queuedAt: undefined });
+      }
     }
 
     const newSessionId = await ctx.db.insert("sessions", {
