@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "add-session-from-sessions-page",
+    date: "2026-04-15",
+    title: "Create sessions from the Sessions page",
+    description:
+      "You can now log sessions directly from the Sessions page. Tap '+ add session' to enter a task name, date, start time, and optional end time — perfect for retroactively tracking time you forgot to record.",
+  },
+  {
     id: "whats-new-feed",
     date: "2026-04-15",
     title: "What's New feed",

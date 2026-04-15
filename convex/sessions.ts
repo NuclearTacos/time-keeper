@@ -366,3 +366,30 @@ export const deleteSession = mutation({
     await ctx.db.delete(sessionId);
   },
 });
+
+export const createManualSession = mutation({
+  args: {
+    name: v.string(),
+    tags: v.array(v.string()),
+    startTime: v.number(),
+    endTime: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const taskId = await ctx.db.insert("tasks", {
+      userId,
+      name: args.name,
+      tags: args.tags,
+      createdAt: args.startTime,
+    });
+
+    return await ctx.db.insert("sessions", {
+      taskId,
+      userId,
+      startTime: args.startTime,
+      endTime: args.endTime,
+    });
+  },
+});
