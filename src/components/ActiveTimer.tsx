@@ -172,134 +172,136 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
   }
 
   return (
-    <div className="border rounded-md p-4 space-y-2">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-2">
-            <span className="text-green-500 text-xs shrink-0 mt-0.5">●</span>
-            {isEditing ? (
-              <div className="flex-1 space-y-1" onBlur={handleContainerBlur}>
-                <input
-                  autoFocus={!focusTags && !focusUrl}
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="w-full text-sm font-semibold bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
-                />
-                <div className="relative">
+    <>
+      <div className="border rounded-md p-4 space-y-2">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start gap-2">
+              <span className="text-green-500 text-xs shrink-0 mt-0.5">●</span>
+              {isEditing ? (
+                <div className="flex-1 space-y-1" onBlur={handleContainerBlur}>
                   <input
-                    ref={tagInputRef}
-                    autoFocus={focusTags}
-                    value={editTags}
-                    onChange={(e) => { setEditTags(e.target.value.toLowerCase()); trackTagCursor(e); }}
-                    onKeyDown={handleTagKeyDown}
-                    onClick={trackTagCursor}
-                    onKeyUp={trackTagCursor}
-                    placeholder="tags: #tag1 #tag2"
-                    autoCapitalize="none"
+                    autoFocus={!focusTags && !focusUrl}
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="w-full text-sm font-semibold bg-transparent border-b border-foreground/30 focus:outline-none focus:border-foreground"
+                  />
+                  <div className="relative">
+                    <input
+                      ref={tagInputRef}
+                      autoFocus={focusTags}
+                      value={editTags}
+                      onChange={(e) => { setEditTags(e.target.value.toLowerCase()); trackTagCursor(e); }}
+                      onKeyDown={handleTagKeyDown}
+                      onClick={trackTagCursor}
+                      onKeyUp={trackTagCursor}
+                      placeholder="tags: #tag1 #tag2"
+                      autoCapitalize="none"
+                      className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
+                    />
+                    {tagSugOpen && (
+                      <TagSuggestionDropdown
+                        suggestions={tagSuggestions}
+                        highlightedIndex={tagHlIndex}
+                        onSelect={(tag) => { tagSelectTag(tag); insertTagIntoEdit(tag); }}
+                      />
+                    )}
+                  </div>
+                  <input
+                    autoFocus={focusUrl}
+                    type="url"
+                    autoFocus={focusUrl}
+                    value={editUrl}
+                    onChange={(e) => setEditUrl(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="link: https://…"
                     className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
                   />
-                  {tagSugOpen && (
-                    <TagSuggestionDropdown
-                      suggestions={tagSuggestions}
-                      highlightedIndex={tagHlIndex}
-                      onSelect={(tag) => { tagSelectTag(tag); insertTagIntoEdit(tag); }}
-                    />
-                  )}
                 </div>
-                <input
-                  autoFocus={focusUrl}
-                  type="url"
-                  autoFocus={focusUrl}
-                  value={editUrl}
-                  onChange={(e) => setEditUrl(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="link: https://…"
-                  className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
-                />
-              </div>
-            ) : (
-              <span
-                className="font-semibold cursor-pointer hover:text-muted-foreground transition-colors"
-                onClick={() => startEditing()}
-              >
-                {task?.name ?? "Unknown task"}
-              </span>
-            )}
-          </div>
-          {!isEditing && task && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1" onClick={() => startEditing("tags")}>
-              {task.tags.map((tag) => (
+              ) : (
                 <span
-                  key={tag}
-                  onClick={(e) => { e.stopPropagation(); startEditing("tags", tag); }}
-                  className={`text-xs border rounded px-1 cursor-pointer transition-colors ${getTagTextClass(tagColors?.[tag]) || "text-muted-foreground hover:text-foreground"}`}
+                  className="font-semibold cursor-pointer hover:text-muted-foreground transition-colors"
+                  onClick={() => startEditing()}
                 >
-                  #{tag}
+                  {task?.name ?? "Unknown task"}
                 </span>
-              ))}
+              )}
             </div>
-          )}
-        </div>
-        <div className="text-right shrink-0 space-y-1">
-          <div className="font-mono text-lg tabular-nums">{formatDuration(elapsedMs, elapsedMs < 120_000)}</div>
-          <div className="flex items-center justify-end gap-1.5">
-            {task && (
-              <>
-                {task.url ? (
-                  <a
-                    href={task.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-violet-400 hover:text-violet-300 transition-colors"
-                    title="Open link"
+            {!isEditing && task && task.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1" onClick={() => startEditing("tags")}>
+                {task.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    onClick={(e) => { e.stopPropagation(); startEditing("tags", tag); }}
+                    className={`text-xs border rounded px-1 cursor-pointer transition-colors ${getTagTextClass(tagColors?.[tag]) || "text-muted-foreground hover:text-foreground"}`}
                   >
-                    <Link2 size={13} />
-                  </a>
-                ) : (
-                  <button
-                    onClick={() => startEditing("url")}
-                    className="text-muted-foreground opacity-40 hover:opacity-70 transition-opacity"
-                    title="Add link"
-                  >
-                    <Link2 size={13} />
-                  </button>
-                )}
-                <button
-                  onClick={() => onNoteIconClick?.(task._id)}
-                  className={task.notes ? "text-violet-400 hover:text-violet-300 transition-colors" : "text-muted-foreground opacity-40 hover:opacity-70 transition-opacity"}
-                  title={task.notes ? "View notes" : "Add notes"}
-                >
-                  <StickyNote size={13} />
-                </button>
-              </>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
             )}
-            <button
-              onClick={() => stopSession({})}
-              className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors"
-            >
-              stop
-            </button>
+          </div>
+          <div className="text-right shrink-0 space-y-1">
+            <div className="font-mono text-lg tabular-nums">{formatDuration(elapsedMs, elapsedMs < 120_000)}</div>
+            <div className="flex items-center justify-end gap-1.5">
+              {task && (
+                <>
+                  {task.url ? (
+                    <a
+                      href={task.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-violet-400 hover:text-violet-300 transition-colors"
+                      title="Open link"
+                    >
+                      <Link2 size={13} />
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => startEditing("url")}
+                      className="text-muted-foreground opacity-40 hover:opacity-70 transition-opacity"
+                      title="Add link"
+                    >
+                      <Link2 size={13} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onNoteIconClick?.(task._id)}
+                    className={task.notes ? "text-violet-400 hover:text-violet-300 transition-colors" : "text-muted-foreground opacity-40 hover:opacity-70 transition-opacity"}
+                    title={task.notes ? "View notes" : "Add notes"}
+                  >
+                    <StickyNote size={13} />
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => stopSession({})}
+                className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors"
+              >
+                stop
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="flex items-center gap-1.5 pt-1 border-t border-foreground/10">
-        <button
-          onClick={() => setEditingStart(true)}
-          className="text-xs text-muted-foreground shrink-0 hover:text-foreground hover:underline cursor-pointer transition-colors tabular-nums"
-        >
-          start: {formatTime(session.startTime)}
-        </button>
-        <div className="flex gap-1">
-          {BUMP_OPTIONS.map((display) => (
-            <button
-              key={display}
-              onClick={() => handleBump(display)}
-              className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
-            >
-              {display > 0 ? `+${display}` : display}
-            </button>
-          ))}
+        <div className="flex items-center gap-1.5 pt-1 border-t border-foreground/10">
+          <button
+            onClick={() => setEditingStart(true)}
+            className="text-xs text-muted-foreground shrink-0 hover:text-foreground hover:underline cursor-pointer transition-colors tabular-nums"
+          >
+            start: {formatTime(session.startTime)}
+          </button>
+          <div className="flex gap-1">
+            {BUMP_OPTIONS.map((display) => (
+              <button
+                key={display}
+                onClick={() => handleBump(display)}
+                className="text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 hover:bg-muted transition-colors tabular-nums"
+              >
+                {display > 0 ? `+${display}` : display}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       {editingStart && (
@@ -310,6 +312,6 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
           onClose={() => setEditingStart(false)}
         />
       )}
-    </div>
+    </>
   );
 }
