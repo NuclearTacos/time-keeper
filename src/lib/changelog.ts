@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "whats-new-badge-clears-on-close",
+    date: "2026-04-15",
+    title: "What's New badge now clears after viewing",
+    description:
+      "Fixed a bug where the bell badge count didn't go away after opening the What's New feed. Today's entries are now correctly marked as seen when you view the feed.",
+  },
+  {
     id: "inactive-tab-wake-fix",
     date: "2026-04-15",
     title: "Faster response after leaving the app idle",

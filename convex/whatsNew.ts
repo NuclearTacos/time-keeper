@@ -31,11 +31,18 @@ export const markSeen = mutation({
       .query("whatsNewSeen")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique();
-    const now = Date.now();
+    // Store the start of tomorrow (UTC) so that entries dated today are
+    // considered "seen" — the unseen check uses entryDayEnd > lastSeenAt,
+    // and entryDayEnd for today equals start-of-tomorrow.
+    const startOfTomorrow =
+      (Math.floor(Date.now() / 86400000) + 1) * 86400000;
     if (existing) {
-      await ctx.db.patch(existing._id, { lastSeenAt: now });
+      await ctx.db.patch(existing._id, { lastSeenAt: startOfTomorrow });
     } else {
-      await ctx.db.insert("whatsNewSeen", { userId, lastSeenAt: now });
+      await ctx.db.insert("whatsNewSeen", {
+        userId,
+        lastSeenAt: startOfTomorrow,
+      });
     }
   },
 });
