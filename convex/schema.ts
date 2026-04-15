@@ -80,4 +80,10 @@ export default defineSchema({
     endDate: v.string(),    // YYYY-MM-DD, inclusive
     createdAt: v.number(),  // epoch ms, for ordering
   }).index("by_user", ["userId"]),
+
+  // Tracks when each user last viewed the What's New feed.
+  whatsNewSeen: defineTable({
+    userId: v.id("users"),
+    lastSeenAt: v.number(), // epoch ms when user last opened the feed
+  }).index("by_user", ["userId"]),
 });

@@ -17,6 +17,7 @@ import type * as tagColors from "../tagColors.js";
 import type * as tagHierarchy from "../tagHierarchy.js";
 import type * as tasks from "../tasks.js";
 import type * as userSettings from "../userSettings.js";
+import type * as whatsNew from "../whatsNew.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   tagHierarchy: typeof tagHierarchy;
   tasks: typeof tasks;
   userSettings: typeof userSettings;
+  whatsNew: typeof whatsNew;
 }>;
 
 /**

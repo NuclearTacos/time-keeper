@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { StickyNote } from "lucide-react";
 import { FeedbackButton } from "./FeedbackButton";
+import { WhatsNewButton } from "./WhatsNewButton";
 
 interface NavBarProps {
   notesOpen?: boolean;
@@ -54,6 +55,7 @@ export function NavBar({ notesOpen, onToggleNotes }: NavBarProps) {
               <StickyNote size={16} />
             </button>
           )}
+          <WhatsNewButton />
           <FeedbackButton />
           <button
             onClick={() => signOut()}
