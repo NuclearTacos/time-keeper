@@ -21,11 +21,16 @@ export const getActiveSession = query({
 });
 
 export const getRecentTasks = query({
-  args: { limit: v.optional(v.number()), startOfToday: v.optional(v.number()) },
+  args: {
+    limit: v.optional(v.number()),
+    startOfToday: v.optional(v.number()),
+    endTime: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
     const limit = args.limit ?? 10;
+    const maxSessions = args.endTime !== undefined ? 500 : 100;
 
     const sessions = await ctx.db
       .query("sessions")
@@ -36,12 +41,17 @@ export const getRecentTasks = query({
           : base;
       })
       .order("desc")
-      .take(100);
+      .take(maxSessions);
+
+    const filtered =
+      args.endTime !== undefined
+        ? sessions.filter((s) => s.startTime < args.endTime!)
+        : sessions;
 
     const seen = new Set<string>();
     const recent: { task: Awaited<ReturnType<typeof ctx.db.get<"tasks">>>; lastSessionStart: number }[] = [];
 
-    for (const session of sessions) {
+    for (const session of filtered) {
       const taskIdStr = session.taskId as string;
       if (seen.has(taskIdStr)) continue;
       seen.add(taskIdStr);

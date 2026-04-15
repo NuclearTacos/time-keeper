@@ -10,12 +10,13 @@ import { NotesPane } from "@/components/NotesPane";
 import { TodoQueue } from "@/components/TodoQueue";
 import { useActiveTags } from "@/lib/useActiveTags";
 import { useBumpAccumulator } from "@/lib/useBumpAccumulator";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { popLastUndo } from "@/lib/undo";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
 
 export default function Home() {
   const { tags, addTag, removeTag } = useActiveTags();
@@ -24,6 +25,13 @@ export default function Home() {
 
   const [notesPaneOpen, setNotesPaneOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<Id<"tasks"> | null>(null);
+  const [lastSevenDaysOpen, setLastSevenDaysOpen] = useState(false);
+
+  const startOfToday = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  }, []);
+  const sevenDaysAgo = startOfToday - 7 * 24 * 60 * 60 * 1000;
 
   // Default to active task when pane opens with no selection
   const activeTaskId = activeData?.task?._id ?? null;
@@ -99,6 +107,27 @@ export default function Home() {
               Recent
             </h2>
             <RecentTasksList onSelectTask={handleSelectTask} onNoteIconClick={handleNoteIconClick} />
+          </section>
+          <section>
+            <button
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors w-full text-left"
+              onClick={() => setLastSevenDaysOpen((v) => !v)}
+            >
+              <ChevronDown
+                size={13}
+                className={cn("transition-transform", lastSevenDaysOpen ? "rotate-0" : "-rotate-90")}
+              />
+              Last 7 Days
+            </button>
+            {lastSevenDaysOpen && (
+              <RecentTasksList
+                onSelectTask={handleSelectTask}
+                onNoteIconClick={handleNoteIconClick}
+                startTime={sevenDaysAgo}
+                endTime={startOfToday}
+                emptyMessage="No tasks in the last 7 days."
+              />
+            )}
           </section>
         </main>
         {/* Desktop: notes pane to the right */}

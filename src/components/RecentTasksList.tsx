@@ -15,11 +15,19 @@ import { getTagTextClass } from "@/lib/tagColors";
 interface RecentTasksListProps {
   onSelectTask?: (taskId: Id<"tasks">) => void;
   onNoteIconClick?: (taskId: Id<"tasks">) => void;
+  startTime?: number;
+  endTime?: number;
+  emptyMessage?: string;
 }
 
-export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksListProps) {
+export function RecentTasksList({ onSelectTask, onNoteIconClick, startTime, endTime, emptyMessage }: RecentTasksListProps) {
   const startOfToday = getStartOfToday();
-  const recentTasks = useQuery(api.sessions.getRecentTasks, { limit: 10, startOfToday });
+  const effectiveStart = startTime ?? startOfToday;
+  const recentTasks = useQuery(api.sessions.getRecentTasks, {
+    limit: 20,
+    startOfToday: effectiveStart,
+    ...(endTime !== undefined ? { endTime } : {}),
+  });
   const tagColors = useQuery(api.tagColors.getTagColors);
   const activeData = useQuery(api.sessions.getActiveSession);
   const startSession = useMutation(api.sessions.startSession);
@@ -79,7 +87,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
   const visibleTasks = recentTasks.filter(({ task }) => task && task._id !== activeTaskId && !task.queuedAt);
 
   if (visibleTasks.length === 0) {
-    return <p className="text-sm text-muted-foreground">No tasks today.</p>;
+    return <p className="text-sm text-muted-foreground">{emptyMessage ?? "No tasks today."}</p>;
   }
 
   function startEditing(task: { _id: Id<"tasks">; name: string; tags: string[]; url?: string }, focus: "name" | "tags" | "url" = "name", clickedTag?: string) {
