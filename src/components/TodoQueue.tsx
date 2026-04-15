@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { ChevronDown, ChevronRight, X, Pencil, Check } from "lucide-react";
+import { ChevronDown, ChevronRight, X, Pencil, Check, CheckCheck } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { useTagSuggestions } from "@/lib/useTagSuggestions";
@@ -188,6 +188,13 @@ export function TodoQueue({ onSelectTask }: TodoQueueProps) {
                       title="Edit"
                     >
                       <Pencil size={12} />
+                    </button>
+                    <button
+                      onClick={() => dequeueTask({ taskId: task._id })}
+                      className="opacity-0 group-hover:opacity-40 hover:!opacity-70 text-muted-foreground transition-all"
+                      title="Mark complete"
+                    >
+                      <CheckCheck size={13} />
                     </button>
                     <button
                       onClick={() => dequeueTask({ taskId: task._id })}

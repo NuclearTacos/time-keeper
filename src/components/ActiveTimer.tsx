@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { Link2, StickyNote } from "lucide-react";
+import { Link2, StickyNote, CheckCheck } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { formatDuration } from "@/lib/formatDuration";
@@ -26,6 +26,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
   const activeData = useQuery(api.sessions.getActiveSession);
   const tagColors = useQuery(api.tagColors.getTagColors);
   const stopSession = useMutation(api.sessions.stopActiveSession);
+  const dequeueTask = useMutation(api.tasks.dequeueTask);
   const updateTask = useMutation(api.tasks.updateTask);
   const adjustSessionTime = useMutation(api.sessions.adjustSessionTime);
   const updateTaskUrl = useMutation(api.tasks.updateTaskUrl);
@@ -286,6 +287,19 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
                     <StickyNote size={13} />
                   </button>
                 </>
+              )}
+              {task?.queuedAt != null && (
+                <button
+                  onClick={async () => {
+                    await stopSession({});
+                    await dequeueTask({ taskId: task._id });
+                  }}
+                  className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors flex items-center gap-1"
+                  title="Mark complete — stops timer and removes from ToDo"
+                >
+                  <CheckCheck size={12} />
+                  done
+                </button>
               )}
               <button
                 onClick={() => stopSession({})}

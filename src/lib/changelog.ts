@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "todo-mark-complete-button",
+    date: "2026-04-15",
+    title: "Mark todo tasks as done",
+    description:
+      "Todo tasks now have a 'done' button. When a todo is running in the timer, clicking 'done' stops the session and removes it from your ToDo list in one step. Queued todos also have a checkmark button to mark them complete without starting a timer.",
+  },
+  {
     id: "whats-new-same-day-entries-fix",
     date: "2026-04-15",
     title: "What's New now reliably detects all new entries",
