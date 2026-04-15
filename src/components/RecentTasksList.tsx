@@ -35,6 +35,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
   const [focusTags, setFocusTags] = useState(false);
   const [focusUrl, setFocusUrl] = useState(false);
   const [tagCursorPos, setTagCursorPos] = useState(0);
+  const [pendingDates, setPendingDates] = useState<Record<string, string>>({});
   const tagInputRef = useRef<HTMLInputElement>(null);
   const clickedTagRef = useRef<string | null>(null);
 
@@ -151,6 +152,11 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
     saveEdit(taskId);
   }
 
+  const editingTagsList = editTags.trim()
+    ? editTags.split(/\s+/).map((t) => t.replace(/^#/, "").toLowerCase()).filter(Boolean)
+    : [];
+  const editingHasTodo = editingTagsList.includes("todo");
+
   return (
     <>
     <ul className="divide-y">
@@ -202,13 +208,27 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
                     <input
                       autoFocus={focusUrl}
                       type="url"
-                      autoFocus={focusUrl}
                       value={editUrl}
                       onChange={(e) => setEditUrl(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, task._id)}
                       placeholder="link: https://…"
                       className="w-full text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground placeholder:text-muted-foreground/50"
                     />
+                    {editingHasTodo && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground">due</label>
+                        <input
+                          type="date"
+                          value={pendingDates[task._id] ?? ""}
+                          onChange={(e) => setPendingDates((prev) => ({ ...prev, [task._id]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveEdit(task._id);
+                            if (e.key === "Escape") setEditingId(null);
+                          }}
+                          className="text-xs bg-transparent border-b border-foreground/20 focus:outline-none focus:border-foreground/50 text-muted-foreground"
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -272,7 +292,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
               </button>
               {task.tags.includes("todo") ? (
                 <button
-                  onClick={() => queueTask({ taskId: task._id })}
+                  onClick={() => queueTask({ taskId: task._id, scheduledDate: pendingDates[task._id] || undefined })}
                   className="text-xs border rounded px-2 py-1 hover:bg-muted transition-colors flex items-center gap-1"
                   title="Add to ToDo queue"
                 >

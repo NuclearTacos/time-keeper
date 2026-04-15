@@ -187,7 +187,7 @@ export const updateTaskUrl = mutation({
 });
 
 export const queueTask = mutation({
-  args: { taskId: v.id("tasks") },
+  args: { taskId: v.id("tasks"), scheduledDate: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
@@ -196,6 +196,7 @@ export const queueTask = mutation({
     await ctx.db.patch(args.taskId, {
       tags: task.tags.filter((t) => t !== "todo"),
       queuedAt: Date.now(),
+      scheduledDate: args.scheduledDate,
     });
   },
 });
