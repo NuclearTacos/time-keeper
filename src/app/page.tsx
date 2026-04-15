@@ -29,6 +29,12 @@ export default function Home() {
   const activeTaskId = activeData?.task?._id ?? null;
   const notesTaskId = selectedTaskId ?? activeTaskId;
 
+  // When the active task changes (e.g. from another device), reset selection
+  // so the notes pane follows the new active task.
+  useEffect(() => {
+    setSelectedTaskId(null);
+  }, [activeTaskId]);
+
   function handleSelectTask(taskId: Id<"tasks">) {
     setSelectedTaskId(taskId);
     setNotesPaneOpen(true);
