@@ -1,10 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { Calendar } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { epochMsToTimeString, timeStringToEpochMs } from "@/lib/formatTime";
+import { epochMsToTimeString } from "@/lib/formatTime";
+
+function epochMsToDateString(epochMs: number): string {
+  const d = new Date(epochMs);
+  const y = d.getFullYear();
+  const m = (d.getMonth() + 1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function dateAndTimeToEpochMs(dateStr: string, timeStr: string): number {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0).getTime();
+}
 
 interface TimeEditModalProps {
   sessionId: Id<"sessions">;
@@ -15,10 +30,12 @@ interface TimeEditModalProps {
 
 export function TimeEditModal({ sessionId, boundary, currentEpochMs, onClose }: TimeEditModalProps) {
   const [timeValue, setTimeValue] = useState(() => epochMsToTimeString(currentEpochMs));
+  const [dateValue, setDateValue] = useState(() => epochMsToDateString(currentEpochMs));
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const setSessionTime = useMutation(api.sessions.setSessionTime);
 
   async function handleSave() {
-    const newTime = timeStringToEpochMs(timeValue, currentEpochMs);
+    const newTime = dateAndTimeToEpochMs(dateValue, timeValue);
     if (newTime === currentEpochMs) {
       onClose();
       return;
@@ -45,19 +62,45 @@ export function TimeEditModal({ sessionId, boundary, currentEpochMs, onClose }: 
           }}
           className="w-full text-sm bg-transparent border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring tabular-nums"
         />
-        <div className="flex justify-end gap-3">
+        {showDatePicker && (
+          <input
+            type="date"
+            value={dateValue}
+            onChange={(e) => setDateValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") onClose();
+              if (e.key === "Enter") handleSave();
+            }}
+            className="w-full text-sm bg-transparent border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring tabular-nums"
+          />
+        )}
+        <div className="flex justify-between items-center">
           <button
-            onClick={onClose}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            className={`flex items-center gap-1.5 text-xs transition-colors ${
+              showDatePicker
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            title={showDatePicker ? "Hide date picker" : "Change date"}
           >
-            cancel
+            <Calendar size={13} />
+            {showDatePicker ? "hide date" : "change date"}
           </button>
-          <button
-            onClick={handleSave}
-            className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors"
-          >
-            save
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors"
+            >
+              save
+            </button>
+          </div>
         </div>
       </div>
     </div>
