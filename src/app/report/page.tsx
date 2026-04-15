@@ -36,6 +36,10 @@ export default function ReportPage() {
   const [sprintFrom, setSprintFrom] = useState(todayStr);
   const [sprintTo, setSprintTo] = useState(todayStr);
 
+  // Filter state
+  const [filterTags, setFilterTags] = useState<Set<string>>(new Set());
+  const [filterText, setFilterText] = useState("");
+
   const todayFromMs = startOfDay(todayStr);
   const todayToMs = endOfDay(todayStr);
 
@@ -62,34 +66,80 @@ export default function ReportPage() {
     [rawHierarchy]
   );
 
+  // All tags present in the current period (resolved through hierarchy), for filter pills
+  const availableTags = useMemo(() => {
+    if (!entries) return [];
+    const tagSet = new Set<string>();
+    for (const { task } of entries) {
+      if (!task) continue;
+      for (const tag of task.tags) {
+        tagSet.add(hierarchyMap.get(tag) ?? tag);
+      }
+    }
+    return [...tagSet].sort();
+  }, [entries, hierarchyMap]);
+
+  // Entries after applying active filters
+  const filteredEntries = useMemo((): SessionEntry[] | undefined => {
+    if (!entries) return undefined;
+    let result = entries;
+    const lowerSearch = filterText.trim().toLowerCase();
+    if (lowerSearch) {
+      result = result.filter((e) =>
+        e.task?.name.toLowerCase().includes(lowerSearch)
+      );
+    }
+    if (filterTags.size > 0) {
+      result = result.filter((e) => {
+        if (!e.task) return false;
+        return e.task.tags.some((t) => {
+          const resolved = hierarchyMap.get(t) ?? t;
+          return filterTags.has(resolved) || filterTags.has(t);
+        });
+      });
+    }
+    return result;
+  }, [entries, filterText, filterTags, hierarchyMap]);
+
+  function toggleFilterTag(tag: string) {
+    setFilterTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  }
+
   const taskBarData = useMemo(
-    () => (entries ? buildTaskBarData(entries) : []),
-    [entries]
+    () => (filteredEntries ? buildTaskBarData(filteredEntries) : []),
+    [filteredEntries]
   );
   const colorMap = useMemo(
     () => buildColorMap(taskBarData.map((d) => d.taskId)),
     [taskBarData]
   );
   const tagDonutData = useMemo(
-    () => (entries ? buildTagDonutData(entries, Date.now(), hierarchyMap) : []),
-    [entries, hierarchyMap]
+    () => (filteredEntries ? buildTagDonutData(filteredEntries, Date.now(), hierarchyMap) : []),
+    [filteredEntries, hierarchyMap]
   );
   const totalMs = useMemo(
-    () => (entries ? computeTotalMs(entries) : 0),
-    [entries]
+    () => (filteredEntries ? computeTotalMs(filteredEntries) : 0),
+    [filteredEntries]
   );
   const timelineData = useMemo(
     () =>
-      entries && tab === "today"
-        ? buildTimelineData(entries, todayFromMs, todayToMs, Date.now(), hierarchyMap)
+      filteredEntries && tab === "today"
+        ? buildTimelineData(filteredEntries, todayFromMs, todayToMs, Date.now(), hierarchyMap)
         : [],
-    [entries, tab, todayFromMs, todayToMs, hierarchyMap]
+    [filteredEntries, tab, todayFromMs, todayToMs, hierarchyMap]
   );
   const heatmapData = useMemo(
-    () => (entries ? buildHeatmapData(entries, fromTime, toTime) : []),
+    () => (filteredEntries ? buildHeatmapData(filteredEntries, fromTime, toTime) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [entries, fromTime, toTime]
+    [filteredEntries, fromTime, toTime]
   );
+
+  const hasActiveFilters = filterTags.size > 0 || filterText.trim().length > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -133,12 +183,64 @@ export default function ReportPage() {
           </div>
         ) : (
           <>
+            {/* Filter section */}
+            <div className="space-y-2 pb-1 border-b border-border">
+              {availableTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 items-center">
+                  <span className="text-xs text-muted-foreground shrink-0">Tags:</span>
+                  {availableTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => toggleFilterTag(tag)}
+                      className={cn(
+                        "text-xs px-2 py-0.5 rounded-full border transition-colors",
+                        filterTags.has(tag)
+                          ? "bg-foreground text-background border-transparent"
+                          : "text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground/50"
+                      )}
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                  {filterTags.size > 0 && (
+                    <button
+                      onClick={() => setFilterTags(new Set())}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground shrink-0">Search:</span>
+                <input
+                  type="text"
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  placeholder="Filter by task name…"
+                  className="text-xs bg-transparent border-b border-transparent focus:border-muted-foreground/40 focus:outline-none placeholder:text-muted-foreground/40 flex-1 py-0.5 transition-colors"
+                />
+                {filterText && (
+                  <button
+                    onClick={() => setFilterText("")}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    aria-label="Clear search"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Total */}
             <div>
               <span className="text-3xl font-semibold tabular-nums">
                 {formatDuration(totalMs)}
               </span>
-              <span className="text-sm text-muted-foreground ml-2">total</span>
+              <span className="text-sm text-muted-foreground ml-2">
+                {hasActiveFilters ? "filtered total" : "total"}
+              </span>
             </div>
 
             {/* Today: timeline */}

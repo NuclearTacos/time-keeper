@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "report-tag-task-filters",
+    date: "2026-04-15",
+    title: "Filter the report by tag and task name",
+    description:
+      "The report page now has filter tools above every chart. Click tag pills to show only sessions matching those tags (hierarchy-aware: selecting a supertag also matches subtags), and use the search box to narrow down by task name. The total updates in real time to reflect your filtered selection.",
+  },
+  {
     id: "todo-mark-complete-button",
     date: "2026-04-15",
     title: "Mark todo tasks as done",
