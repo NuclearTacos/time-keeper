@@ -182,6 +182,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
                 <div className="flex-1 space-y-1" onBlur={handleContainerBlur}>
                   <input
                     autoFocus={!focusTags && !focusUrl}
+                    autoCapitalize="sentences"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={handleKeyDown}

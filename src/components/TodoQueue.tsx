@@ -115,6 +115,7 @@ export function TodoQueue({ onSelectTask }: TodoQueueProps) {
                   >
                     <input
                       autoFocus
+                      autoCapitalize="sentences"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => {

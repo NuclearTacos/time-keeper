@@ -136,6 +136,7 @@ export default function TagsPage() {
                     {isEditingName ? (
                       <input
                         autoFocus
+                        autoCapitalize="none"
                         value={nameDraft}
                         onChange={(e) => setNameDrafts((d) => ({ ...d, [tag]: e.target.value }))}
                         onBlur={() => commitRename(tag)}
@@ -166,6 +167,7 @@ export default function TagsPage() {
                     <span className="text-xs text-muted-foreground shrink-0">→</span>
 
                     <input
+                      autoCapitalize="none"
                       value={supertagDraft}
                       onChange={(e) => setSupertagDrafts((d) => ({ ...d, [tag]: e.target.value }))}
                       onBlur={() => commitSupertag(tag)}

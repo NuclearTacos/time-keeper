@@ -172,6 +172,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
                   >
                     <input
                       autoFocus={!focusTags && !focusUrl}
+                      autoCapitalize="sentences"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, task._id)}
