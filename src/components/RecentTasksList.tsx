@@ -305,7 +305,7 @@ export function RecentTasksList({ onSelectTask, onNoteIconClick }: RecentTasksLi
             <div className="space-y-1.5">
               <h2 className="text-sm font-semibold">Delete task</h2>
               <p className="text-sm text-muted-foreground">
-                This will permanently delete <span className="text-foreground font-medium">{confirmDelete.taskName}</span> and all its sessions.
+                This will permanently delete <span className="text-foreground font-medium break-words">{confirmDelete.taskName}</span> and all its sessions.
               </p>
             </div>
           </div>

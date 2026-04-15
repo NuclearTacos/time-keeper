@@ -110,7 +110,7 @@ export function DayTimeline({ sessions, colorMap, dayStart, hierarchy }: Props) 
           style={{ left: `${leftPct}%`, width: `${widthPct}%`, top, background: color, minWidth: 4, opacity: 0.85 }}
         >
           <div
-            className="absolute bottom-full left-0 mb-1 z-10 hidden group-hover:block bg-popover text-popover-foreground rounded px-2 py-1 shadow-md whitespace-nowrap border border-border"
+            className="absolute bottom-full left-0 mb-1 z-10 hidden group-hover:block bg-popover text-popover-foreground rounded px-2 py-1 shadow-md border border-border max-w-xs break-words"
             style={{ fontSize: 11 }}
           >
             {s.taskName} · {s.durationLabel}

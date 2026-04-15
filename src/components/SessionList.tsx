@@ -232,7 +232,7 @@ export function SessionList({ entries, links }: Props) {
               <div className="space-y-1.5">
                 <h2 className="text-sm font-semibold">Delete session</h2>
                 <p className="text-sm text-muted-foreground">
-                  This will permanently delete the <span className="text-foreground font-medium">{confirmDelete.taskName}</span> session ({formatTime(confirmDelete.startTime)}{confirmDelete.endTime ? ` – ${formatTime(confirmDelete.endTime)}` : ""}).
+                  This will permanently delete the <span className="text-foreground font-medium break-words">{confirmDelete.taskName}</span> session ({formatTime(confirmDelete.startTime)}{confirmDelete.endTime ? ` – ${formatTime(confirmDelete.endTime)}` : ""}).
                 </p>
               </div>
             </div>

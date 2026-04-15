@@ -221,7 +221,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
                 </div>
               ) : (
                 <span
-                  className="font-semibold cursor-pointer hover:text-muted-foreground transition-colors"
+                  className="font-semibold cursor-pointer hover:text-muted-foreground transition-colors break-words"
                   onClick={() => startEditing()}
                 >
                   {task?.name ?? "Unknown task"}
