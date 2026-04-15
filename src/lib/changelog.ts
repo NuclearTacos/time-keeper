@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "whats-new-same-day-fix",
+    date: "2026-04-15",
+    title: "What's New feed now catches same-day updates",
+    description:
+      "Fixed a bug where changelog entries added on the same day you last opened the feed would not appear as new. The bell badge and 'new' labels now correctly highlight any entry dated today.",
+  },
+  {
     id: "add-session-from-sessions-page",
     date: "2026-04-15",
     title: "Create sessions from the Sessions page",

@@ -6,13 +6,15 @@ import { Bell } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { CHANGELOG } from "../lib/changelog";
 
-/** An entry date string (YYYY-MM-DD) is considered "unseen" when start-of-day
- *  for that date (UTC) is strictly after lastSeenAt. */
+/** An entry dated YYYY-MM-DD is considered "unseen" if the start of the
+ *  following day (UTC) is strictly after lastSeenAt.  Using end-of-day rather
+ *  than start-of-day means entries added on the same calendar day as a prior
+ *  feed visit still show up as new. */
 function countUnseen(lastSeenAt: number | null): number {
   if (lastSeenAt === null) return CHANGELOG.length;
   return CHANGELOG.filter((entry) => {
-    const entryTime = new Date(entry.date + "T00:00:00Z").getTime();
-    return entryTime > lastSeenAt;
+    const entryDayEnd = new Date(entry.date + "T00:00:00Z").getTime() + 86400000;
+    return entryDayEnd > lastSeenAt;
   }).length;
 }
 
@@ -72,7 +74,8 @@ export function WhatsNewButton() {
                   entry.date + "T00:00:00Z"
                 ).getTime();
                 const isNew =
-                  lastSeenAt === null || entryTime > (lastSeenAt ?? 0);
+                  lastSeenAt === null ||
+                  entryTime + 86400000 > (lastSeenAt ?? 0);
                 return (
                   <li key={entry.id} className="px-4 py-3 space-y-0.5">
                     <div className="flex items-center gap-2">
