@@ -54,7 +54,18 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
     const interval = setInterval(() => {
       setElapsedMs(Date.now() - startTime);
     }, 1000);
-    return () => clearInterval(interval);
+    // Immediately correct the elapsed time when the tab becomes visible again,
+    // since browsers throttle setInterval in inactive tabs.
+    function handleVisibility() {
+      if (document.visibilityState === "visible") {
+        setElapsedMs(Date.now() - startTime);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [activeData?.session?.startTime]);
 
   useEffect(() => {

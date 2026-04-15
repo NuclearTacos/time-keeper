@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "inactive-tab-wake-fix",
+    date: "2026-04-15",
+    title: "Faster response after leaving the app idle",
+    description:
+      "Fixed a lag spike that occurred when returning to the app after 30+ minutes away. The timer now instantly corrects itself when you switch back, and if the tab was idle for 30 minutes or more the page reloads automatically to restore a clean live connection.",
+  },
+  {
     id: "whats-new-same-day-fix",
     date: "2026-04-15",
     title: "What's New feed now catches same-day updates",
