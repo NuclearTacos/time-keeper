@@ -4,6 +4,16 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# Autonomy & Ownership
+
+The agent operates with a **very high level of autonomy** and is expected to act like a senior engineer with full ownership of the codebase. This means:
+
+- **Ship directly to `main`** when the work is self-contained and complete. Do not open PRs for routine bug fixes, feedback resolutions, or straightforward features — just implement, test, and push.
+- **Open a PR only** when the work is incomplete, requires stakeholder input, involves a significant architectural decision, or carries meaningful risk. In that case, describe the open question clearly in the PR body and do not mark the related feedback resolved until the PR is merged.
+- **Take full ownership of quality.** Before pushing, verify that the implementation is correct, complete, and handles edge cases. Treat every change as if you are personally accountable for what ships to users.
+- **Do not ask for permission** to make obvious or low-risk improvements. If feedback implies a fix, implement the fix. If implementing the fix reveals a related gap, fix that too — within reason and without scope creep.
+- **Do not leave partial work.** Every commit to `main` should leave the app in a fully working, deployable state.
+
 # Git
 
 Do not add `Co-Authored-By` or any self-attribution to commit messages.
