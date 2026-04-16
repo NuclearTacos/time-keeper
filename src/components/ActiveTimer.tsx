@@ -106,6 +106,7 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
 
   const { task } = activeData;
   const session = activeData.session;
+  const totalMs = (activeData.totalCompletedMs ?? 0) + elapsedMs;
 
   function startEditing(focus: "name" | "tags" | "url" = "name", clickedTag?: string) {
     if (!task) return;
@@ -224,7 +225,6 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
                   <input
                     autoFocus={focusUrl}
                     type="url"
-                    autoFocus={focusUrl}
                     value={editUrl}
                     onChange={(e) => setEditUrl(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -327,6 +327,12 @@ export function ActiveTimer({ onBump, onSelectTask, onNoteIconClick }: Props) {
                 {display > 0 ? `+${display}` : display}
               </button>
             ))}
+          </div>
+          <div
+            className="ml-auto text-xs text-muted-foreground tabular-nums shrink-0"
+            title="Total time across all sessions of this task"
+          >
+            total: {formatDuration(totalMs)}
           </div>
         </div>
       </div>

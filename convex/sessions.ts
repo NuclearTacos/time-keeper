@@ -16,7 +16,20 @@ export const getActiveSession = query({
       .first();
     if (!session) return null;
     const task = await ctx.db.get(session.taskId);
-    return { session, task };
+
+    // Sum durations of all completed sessions for this task, so the UI can
+    // show the task's lifetime total (the live timer only shows the current
+    // session).
+    const taskSessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_task", (q) => q.eq("taskId", session.taskId))
+      .collect();
+    let totalCompletedMs = 0;
+    for (const s of taskSessions) {
+      if (s.endTime !== undefined) totalCompletedMs += s.endTime - s.startTime;
+    }
+
+    return { session, task, totalCompletedMs };
   },
 });
 

@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "active-timer-total-time",
+    date: "2026-04-16",
+    title: "Active timer shows task's total time",
+    description:
+      "The active timer now shows the task's lifetime total (across every session) at the bottom-right of the card, next to the bump buttons. The big timer still shows the current session — the new total makes it easy to see how much you've sunk into a task overall.",
+  },
+  {
     id: "notes-list-continuation",
     date: "2026-04-16",
     title: "Lists auto-continue in note editor",
