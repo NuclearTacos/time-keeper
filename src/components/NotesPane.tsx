@@ -80,6 +80,15 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const pendingCursorRef = useRef<number | null>(null);
+
+  // Apply a pending cursor position after the textarea re-renders with a new value
+  useLayoutEffect(() => {
+    if (pendingCursorRef.current === null) return;
+    const ta = textareaRef.current;
+    if (ta) ta.setSelectionRange(pendingCursorRef.current, pendingCursorRef.current);
+    pendingCursorRef.current = null;
+  }, [draft]);
 
   // Reset to view mode when switching tasks
   useEffect(() => {
@@ -153,6 +162,54 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
       }
       currentIndex++;
     }
+  }
+
+  // On Enter inside a list item, continue the list on the next line; on Enter in
+  // an empty list item, strip the prefix so the user can exit the list.
+  function handleTextareaKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key !== "Enter" || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.nativeEvent.isComposing) return;
+
+    const ta = e.currentTarget;
+    const { selectionStart, selectionEnd, value } = ta;
+    if (selectionStart !== selectionEnd) return;
+
+    const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
+    const line = value.slice(lineStart, selectionStart);
+
+    // Groups: 1=indent, 2=task-marker, 3=bullet-marker, 4=ordered-number
+    const match = line.match(/^(\s*)(?:([-*+])\s+\[[ xX]\]\s+|([-*+])\s+|(\d+)\.\s+)/);
+    if (!match) return;
+
+    const indent = match[1];
+    const afterPrefix = line.slice(match[0].length);
+
+    e.preventDefault();
+
+    // Empty list item → strip prefix to exit the list
+    if (afterPrefix === "") {
+      const newValue = value.slice(0, lineStart) + value.slice(selectionStart);
+      pendingCursorRef.current = lineStart;
+      setDraft(newValue);
+      return;
+    }
+
+    let newPrefix: string;
+    if (match[2]) {
+      newPrefix = `${indent}${match[2]} [ ] `;
+    } else if (match[3]) {
+      newPrefix = `${indent}${match[3]} `;
+    } else if (match[4]) {
+      const n = parseInt(match[4], 10) + 1;
+      newPrefix = `${indent}${n}. `;
+    } else {
+      return;
+    }
+
+    const insertion = `\n${newPrefix}`;
+    const newValue = value.slice(0, selectionStart) + insertion + value.slice(selectionEnd);
+    pendingCursorRef.current = selectionStart + insertion.length;
+    setDraft(newValue);
   }
 
   // Click in preview → switch to edit, restoring cursor position
@@ -259,6 +316,7 @@ export function NotesPane({ taskId, onClose }: NotesPaneProps) {
           ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleTextareaKeyDown}
           onBlur={(e) => {
             // Only save on blur; container blur handles switching to preview
             if (!containerRef.current?.contains(e.relatedTarget as Node)) {

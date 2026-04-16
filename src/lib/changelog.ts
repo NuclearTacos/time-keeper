@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "notes-list-continuation",
+    date: "2026-04-16",
+    title: "Lists auto-continue in note editor",
+    description:
+      "When editing a note, pressing Enter at the end of a bulleted, numbered, or task-list line now starts the next line with the same prefix (numbers increment, task checkboxes start unchecked). Press Enter again on an empty list item to exit the list.",
+  },
+  {
     id: "report-tag-task-filters",
     date: "2026-04-15",
     title: "Filter the report by tag and task name",
