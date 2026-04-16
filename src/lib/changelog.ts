@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "escape-blurs-input",
+    date: "2026-04-16",
+    title: "Escape unfocuses the active input",
+    description:
+      "Pressing Escape in any text field (including the markdown notes box) now blurs the input, which also saves notes and exits edit mode. Escape still dismisses the tag suggestion dropdown first when it's open, so you won't accidentally leave the field while picking a tag.",
+  },
+  {
     id: "active-timer-total-time",
     date: "2026-04-16",
     title: "Active timer shows task's total time",
