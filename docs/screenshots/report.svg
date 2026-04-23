@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 680" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <style>
+      .bg { fill: #ffffff; }
+      .card { fill: #ffffff; stroke: #e5e5e5; stroke-width: 1; }
+      .mutedCard { fill: #fafafa; stroke: #e5e5e5; stroke-width: 1; }
+      .fg { fill: #171717; }
+      .muted { fill: #737373; }
+      .faint { fill: #a3a3a3; }
+      .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+    </style>
+  </defs>
+  <rect class="bg" width="900" height="680"/>
+
+  <!-- nav bar -->
+  <rect x="0" y="0" width="900" height="56" fill="#ffffff"/>
+  <line x1="0" y1="56" x2="900" y2="56" stroke="#e5e5e5"/>
+  <text x="32" y="36" class="fg" font-size="17" font-weight="600">Time Keeper</text>
+  <text x="560" y="36" class="fg" font-size="14" font-weight="600">Report</text>
+  <text x="620" y="36" class="muted" font-size="14">Sessions</text>
+  <text x="692" y="36" class="muted" font-size="14">Tags</text>
+  <text x="734" y="36" class="muted" font-size="14">Review</text>
+  <circle cx="862" cy="28" r="12" fill="#e5e5e5"/>
+  <text x="862" y="32" text-anchor="middle" fill="#737373" font-size="11" font-weight="600">JT</text>
+
+  <!-- page title -->
+  <text x="48" y="100" class="fg" font-size="24" font-weight="600">Report</text>
+
+  <!-- tabs -->
+  <g transform="translate(48 124)">
+    <rect class="mutedCard" x="0" y="0" width="280" height="36" rx="8"/>
+    <rect fill="#ffffff" stroke="#e5e5e5" x="4" y="4" width="88" height="28" rx="6"/>
+    <text x="48" y="23" text-anchor="middle" class="fg" font-size="13" font-weight="500">Today</text>
+    <text x="138" y="23" text-anchor="middle" class="muted" font-size="13">This Week</text>
+    <text x="228" y="23" text-anchor="middle" class="muted" font-size="13">Sprint</text>
+  </g>
+
+  <!-- filters -->
+  <g transform="translate(360 124)">
+    <rect class="mutedCard" x="0" y="0" width="180" height="36" rx="8"/>
+    <text x="14" y="23" class="muted" font-size="13">Filter by tag…</text>
+    <rect class="mutedCard" x="192" y="0" width="200" height="36" rx="8"/>
+    <text x="206" y="23" class="muted" font-size="13">Filter by task name…</text>
+  </g>
+
+  <!-- totals -->
+  <g transform="translate(48 188)">
+    <rect class="card" x="0" y="0" width="260" height="88" rx="12"/>
+    <text x="20" y="28" class="muted" font-size="12" font-weight="600" letter-spacing="0.06em">TOTAL TODAY</text>
+    <text x="20" y="66" class="fg mono" font-size="30" font-weight="500">5h 47m</text>
+
+    <rect class="card" x="276" y="0" width="260" height="88" rx="12"/>
+    <text x="296" y="28" class="muted" font-size="12" font-weight="600" letter-spacing="0.06em">SESSIONS</text>
+    <text x="296" y="66" class="fg mono" font-size="30" font-weight="500">14</text>
+
+    <rect class="card" x="552" y="0" width="260" height="88" rx="12"/>
+    <text x="572" y="28" class="muted" font-size="12" font-weight="600" letter-spacing="0.06em">TAGS USED</text>
+    <text x="572" y="66" class="fg mono" font-size="30" font-weight="500">6</text>
+  </g>
+
+  <!-- Time by task (bar chart) -->
+  <g transform="translate(48 300)">
+    <rect class="card" x="0" y="0" width="536" height="340" rx="12"/>
+    <text x="20" y="30" class="fg" font-size="15" font-weight="600">Time by task</text>
+
+    <!-- bars -->
+    <g transform="translate(20 52)" font-size="12">
+      <!-- row 1 -->
+      <text x="0" y="14" class="fg">Fix OAuth callback bug</text>
+      <text x="492" y="14" text-anchor="end" class="fg mono">1h 42m</text>
+      <rect x="0" y="22" width="340" height="10" rx="3" fill="#3b82f6"/>
+
+      <!-- row 2 -->
+      <text x="0" y="58" class="fg">Triage incoming bugs</text>
+      <text x="492" y="58" text-anchor="end" class="fg mono">1h 12m</text>
+      <rect x="0" y="66" width="240" height="10" rx="3" fill="#22c55e"/>
+
+      <!-- row 3 -->
+      <text x="0" y="102" class="fg">Write migration for notifications</text>
+      <text x="492" y="102" text-anchor="end" class="fg mono">52m</text>
+      <rect x="0" y="110" width="176" height="10" rx="3" fill="#14b8a6"/>
+
+      <!-- row 4 -->
+      <text x="0" y="146" class="fg">Sprint planning notes</text>
+      <text x="492" y="146" text-anchor="end" class="fg mono">48m</text>
+      <rect x="0" y="154" width="160" height="10" rx="3" fill="#f59e0b"/>
+
+      <!-- row 5 -->
+      <text x="0" y="190" class="fg">Respond to design review</text>
+      <text x="492" y="190" text-anchor="end" class="fg mono">36m</text>
+      <rect x="0" y="198" width="120" height="10" rx="3" fill="#a855f7"/>
+
+      <!-- row 6 -->
+      <text x="0" y="234" class="fg">Pair: onboarding flow</text>
+      <text x="492" y="234" text-anchor="end" class="fg mono">22m</text>
+      <rect x="0" y="242" width="76" height="10" rx="3" fill="#ec4899"/>
+
+      <!-- row 7 -->
+      <text x="0" y="278" class="fg">Weekly team sync</text>
+      <text x="492" y="278" text-anchor="end" class="fg mono">15m</text>
+      <rect x="0" y="286" width="50" height="10" rx="3" fill="#ef4444"/>
+    </g>
+  </g>
+
+  <!-- Time by tag (donut chart) -->
+  <g transform="translate(604 300)">
+    <rect class="card" x="0" y="0" width="248" height="340" rx="12"/>
+    <text x="20" y="30" class="fg" font-size="15" font-weight="600">Time by tag</text>
+
+    <!-- donut -->
+    <g transform="translate(124 148)">
+      <!-- backend - 34%, 0 to 122.4deg -->
+      <path d="M 0 -64 A 64 64 0 0 1 54.1 34.2 L 33.8 21.4 A 40 40 0 0 0 0 -40 Z" fill="#3b82f6"/>
+      <!-- ops - 22%, 122.4 to 201.6 -->
+      <path d="M 54.1 34.2 A 64 64 0 0 1 -23.3 59.6 L -14.6 37.3 A 40 40 0 0 0 33.8 21.4 Z" fill="#22c55e"/>
+      <!-- backend-sub teal - 14%, 201.6 to 252 -->
+      <path d="M -23.3 59.6 A 64 64 0 0 1 -60.9 -19.8 L -38.0 -12.4 A 40 40 0 0 0 -14.6 37.3 Z" fill="#14b8a6"/>
+      <!-- planning - 12%, 252 to 295.2 -->
+      <path d="M -60.9 -19.8 A 64 64 0 0 1 -54.5 -33.5 L -34.1 -21.0 A 40 40 0 0 0 -38.0 -12.4 Z" fill="#f59e0b"/>
+      <!-- reviews - 10%, 295.2 to 331.2 -->
+      <path d="M -54.5 -33.5 A 64 64 0 0 1 -30.9 -56.0 L -19.3 -35.0 A 40 40 0 0 0 -34.1 -21.0 Z" fill="#a855f7"/>
+      <!-- auth - 8%, 331.2 to 360 -->
+      <path d="M -30.9 -56.0 A 64 64 0 0 1 0 -64 L 0 -40 A 40 40 0 0 0 -19.3 -35.0 Z" fill="#ef4444"/>
+      <!-- center label -->
+      <text x="0" y="-2" text-anchor="middle" class="muted" font-size="10" font-weight="600">TOTAL</text>
+      <text x="0" y="16" text-anchor="middle" class="fg mono" font-size="16" font-weight="600">5h 47m</text>
+    </g>
+
+    <!-- legend -->
+    <g transform="translate(20 244)" font-size="11">
+      <circle cx="6" cy="6" r="4" fill="#3b82f6"/><text x="16" y="10" class="fg">#backend</text><text x="104" y="10" text-anchor="end" class="muted mono">34%</text>
+      <circle cx="6" cy="26" r="4" fill="#22c55e"/><text x="16" y="30" class="fg">#ops</text><text x="104" y="30" text-anchor="end" class="muted mono">22%</text>
+      <circle cx="6" cy="46" r="4" fill="#14b8a6"/><text x="16" y="50" class="fg">#backend/db</text><text x="104" y="50" text-anchor="end" class="muted mono">14%</text>
+      <circle cx="124" cy="6" r="4" fill="#f59e0b"/><text x="134" y="10" class="fg">#planning</text><text x="224" y="10" text-anchor="end" class="muted mono">12%</text>
+      <circle cx="124" cy="26" r="4" fill="#a855f7"/><text x="134" y="30" class="fg">#reviews</text><text x="224" y="30" text-anchor="end" class="muted mono">10%</text>
+      <circle cx="124" cy="46" r="4" fill="#ef4444"/><text x="134" y="50" class="fg">#auth</text><text x="224" y="50" text-anchor="end" class="muted mono">8%</text>
+    </g>
+  </g>
+</svg>

@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "readme-refresh",
+    date: "2026-04-23",
+    title: "Rewrote the README with screenshots",
+    description:
+      "The repo's README is now a real description of Time Keeper — what it does, its tech stack, and how to run it locally — with illustrative screenshots of the home, report, and sessions views. Anyone opening the GitHub repo now gets an accurate picture of the app instead of the stock Next.js template.",
+  },
+  {
     id: "escape-blurs-input",
     date: "2026-04-16",
     title: "Escape unfocuses the active input",
