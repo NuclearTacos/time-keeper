@@ -29,7 +29,10 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "WebSearch",
-      "mcp__2f009f62-517e-4ec7-a879-e714bf919464__web_fetch_vercel_url"
+      "mcp__2f009f62-517e-4ec7-a879-e714bf919464__web_fetch_vercel_url",
+      "mcp__2f009f62-517e-4ec7-a879-e714bf919464__list_teams",
+      "mcp__2f009f62-517e-4ec7-a879-e714bf919464__list_projects",
+      "mcp__2f009f62-517e-4ec7-a879-e714bf919464__get_runtime_logs"
     ]
   }
 }
