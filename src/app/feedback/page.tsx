@@ -14,6 +14,7 @@ export default function FeedbackPage() {
   const entries = useQuery(api.feedback.listFeedback);
   const clearAll = useMutation(api.feedback.clearAllFeedback);
   const resolve = useMutation(api.feedback.resolveFeedback);
+  const isAdmin = useQuery(api.admin.isCurrentUserAdmin);
   const [showResolved, setShowResolved] = useState(false);
   const [fixingId, setFixingId] = useState<string | null>(null);
 
@@ -98,13 +99,15 @@ export default function FeedbackPage() {
                   </div>
                   {!entry.resolved && (
                     <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleFix(entry._id, entry.text)}
-                        disabled={fixingId === entry._id}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
-                      >
-                        {fixingId === entry._id ? "fixing…" : "fix"}
-                      </button>
+                      {isAdmin === true && (
+                        <button
+                          onClick={() => handleFix(entry._id, entry.text)}
+                          disabled={fixingId === entry._id}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+                        >
+                          {fixingId === entry._id ? "fixing…" : "fix"}
+                        </button>
+                      )}
                       <button
                         onClick={() => resolve({ feedbackId: entry._id as Id<"feedback"> })}
                         className="text-xs text-muted-foreground hover:text-green-600 transition-colors"

@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "admin-only-fix-runs",
+    date: "2026-09-11",
+    title: "Only admins can trigger Claude fix runs",
+    description:
+      "Triggering a fix hands text straight to Claude, which ships code to the app, so it is now restricted to admin accounts. Admin is a flag on your user record, the /api/fix endpoint verifies it on the signed-in user before calling Claude, and the “fix” and “submit & fix” buttons are hidden for everyone else. Previously any signed-in account could start a fix run. Leaving ordinary feedback is unchanged and still open to all users.",
+  },
+  {
     id: "readme-refresh",
     date: "2026-04-23",
     title: "Rewrote the README with screenshots",

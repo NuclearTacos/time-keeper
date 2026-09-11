@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { Lightbulb } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 
@@ -11,6 +11,7 @@ export function FeedbackButton() {
   const [loading, setLoading] = useState(false);
   const [loadingFix, setLoadingFix] = useState(false);
   const submit = useMutation(api.feedback.submitFeedback);
+  const isAdmin = useQuery(api.admin.isCurrentUserAdmin);
 
   function close() {
     setOpen(false);
@@ -95,13 +96,15 @@ export function FeedbackButton() {
                 >
                   {loading ? "submitting…" : "submit"}
                 </button>
-                <button
-                  onClick={handleSubmitAndFix}
-                  disabled={loading || loadingFix || !text.trim()}
-                  className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors disabled:opacity-40"
-                >
-                  {loadingFix ? "fixing…" : "submit & fix"}
-                </button>
+                {isAdmin === true && (
+                  <button
+                    onClick={handleSubmitAndFix}
+                    disabled={loading || loadingFix || !text.trim()}
+                    className="text-sm border rounded px-3 py-1 hover:bg-muted transition-colors disabled:opacity-40"
+                  >
+                    {loadingFix ? "fixing…" : "submit & fix"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

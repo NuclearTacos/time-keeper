@@ -5,6 +5,16 @@ import { v } from "convex/values";
 export default defineSchema({
   ...authTables,
 
+  // Extends the auth-provided `users` table with an admin flag. Admins are the
+  // only users allowed to trigger Claude fix runs (see convex/admin.ts).
+  // Grant by setting `isAdmin: true` on the user document in the Convex dashboard.
+  users: defineTable({
+    ...authTables.users.validator.fields,
+    isAdmin: v.optional(v.boolean()),
+  })
+    .index("email", ["email"])
+    .index("phone", ["phone"]),
+
   tasks: defineTable({
     userId: v.id("users"),
     name: v.string(),
