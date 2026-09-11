@@ -23,6 +23,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "admin-only-clear-feedback",
+    date: "2026-09-11",
+    title: "Clearing all feedback is now admin-only",
+    description:
+      "The “clear all” action on the Feedback page deletes every user’s feedback, but it previously required no permission at all. It now requires the admin flag, is enforced server-side in Convex, and the button is hidden for non-admins.",
+  },
+  {
     id: "admin-only-fix-runs",
     date: "2026-09-11",
     title: "Only admins can trigger Claude fix runs",

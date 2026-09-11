@@ -49,7 +49,7 @@ export default function FeedbackPage() {
                 {showResolved ? "hide resolved" : `show resolved (${resolvedCount})`}
               </button>
             )}
-            {entries && entries.length > 0 && (
+            {isAdmin === true && entries && entries.length > 0 && (
               <button
                 onClick={() => {
                   if (confirm("Clear all feedback?")) clearAll();

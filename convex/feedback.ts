@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAdmin } from "./admin";
 
 export const submitFeedback = mutation({
   args: { text: v.string() },
@@ -31,10 +32,11 @@ export const resolveFeedback = mutation({
   },
 });
 
-// No auth required so `npx convex run feedback:clearAllFeedback` works.
+// Deletes every user's feedback, so this is admin-only (users.isAdmin).
 export const clearAllFeedback = mutation({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     const all = await ctx.db.query("feedback").collect();
     await Promise.all(all.map((f) => ctx.db.delete(f._id)));
   },
