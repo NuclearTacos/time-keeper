@@ -114,3 +114,7 @@ To make yourself an admin, set `isAdmin: true` on your row in the Convex dashboa
 ## Contributing
 
 Conventions live in [`AGENTS.md`](./AGENTS.md): ship complete work straight to `main`, keep `convex/_generated/` in sync, add a What's New entry for every user-visible change, and resolve the feedback that prompted it.
+
+## License
+
+[MIT](./LICENSE)
