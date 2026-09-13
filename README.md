@@ -4,6 +4,10 @@ A personal time tracker that gets out of your way. Type what you're working on, 
 
 **Live app:** <https://time-keeper-pink.vercel.app> · **Stack:** Next.js 16 · React 19 · Convex · Tailwind v4 · Vercel
 
+![The core loop — type a task with hashtags, start it, start the next one and the first stops automatically](docs/screenshots/core-loop.gif)
+
+Type a task, start it, start the next one. Tags come from the `#hashtags` (plus whatever is pinned in the **context** bar), and the previous session stops and links to the new one on its own.
+
 ![Home — live timer with lifetime total, markdown notes pane, todo queue, and recent tasks](docs/screenshots/home.png)
 
 > All screenshots are captured from the deployed app on a demo account.
@@ -89,6 +93,17 @@ Where to look:
 | `src/app/report/`, `src/components/report/` | Timeline, heatmap, and chart components |
 | `src/lib/changelog.ts` | Source of the What's New feed |
 | `AGENTS.md` | Conventions for humans and agents working in the repo |
+
+## Decisions
+
+- **Convex instead of Postgres + an ORM.** Schema, server functions, auth, and real-time subscriptions are one system and one deploy. Every view is a live query, so multi-device consistency came for free instead of being a feature. The cost is lock-in and heavy TypeScript inference: Next's built-in type check overflows on Convex's recursive types, so the build runs `tsc --noEmit` separately and tells Next to skip its own pass.
+- **Tags live in the task name.** No setup step before you can log time; structure is added later, when you know what you want to see. Typos create stray tags, so the Tags page has rename and merge tools rather than pretending the problem doesn't exist.
+- **Session links instead of a gapless-timeline invariant.** When starting a task stops the previous one, the boundary is recorded as an explicit link between the two sessions. Nudging one edge moves the other, and a link can be removed when the sessions really were separate. Explicit records were easier to reason about, and to undo, than a global rule.
+- **Ship to `main`, including the agent.** One maintainer, a small app, and an atomic Vercel deploy make branches mostly ceremony. The guardrails are conventions rather than process: `AGENTS.md`, typecheck and lint before push, a What's New entry for every user-visible change, and a PR only when there is an open question.
+- **What's New is a static array.** The feed is a TypeScript file, so an agent fixing feedback edits one file and does not need write access to the database. Per-user "seen" state is the only thing stored server-side.
+- **Admin is a database flag, not an allowlist.** An env-var list of emails would have been faster, but it is invisible to the app, easy to leave stale, and impossible to reason about from the schema. A boolean on the user document is checked the same way everywhere.
+
+**What I would revisit:** there are no automated tests; session-link bumping and sprint detection are exactly the kind of logic that deserves them. The feedback read and resolve endpoints are unauthenticated so a cloud agent can reach them, which I would replace with a signed token. And `ignoreBuildErrors` is a workaround I would rather not need.
 
 ## Running it locally
 
